@@ -8,7 +8,9 @@ import {
   Database, 
   Layers, 
   CheckCircle2,
-  Compass
+  Compass,
+  Zap,
+  Plus
 } from 'lucide-react';
 
 export default function Header({
@@ -20,6 +22,9 @@ export default function Header({
   onOpenConflicts,
   onOpenSimulator,
   onOpenEntities,
+  onOpenQuickAdd,
+  onAutoResolveAll,
+  isAutoResolving,
   onResetSeed,
   isResetting,
   onExportCSV,
@@ -51,19 +56,19 @@ export default function Header({
           </div>
 
           {/* Month Selector & Action Controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             {/* Guide Tour Toggle */}
             <button
               onClick={onToggleGuide}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all flex items-center gap-1.5 ${
                 isGuideOpen
-                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 shadow-sm'
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-300 shadow-xs'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               }`}
               title="Toggle Assessment Walkthrough Guide"
             >
               <Compass className="h-3.5 w-3.5 text-indigo-600" />
-              <span className="hidden md:inline">Demo Walkthrough</span>
+              <span className="hidden xl:inline">Demo Tour</span>
             </button>
 
             {/* Month Picker */}
@@ -84,26 +89,49 @@ export default function Header({
             <button
               onClick={onGenerate}
               disabled={isGenerating}
-              className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-600/30 disabled:opacity-50 transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>{isGenerating ? 'Solving...' : 'Generate Roster'}</span>
             </button>
 
+            {/* Auto-Resolve All Gaps Button */}
+            {criticalGapsCount > 0 && (
+              <button
+                onClick={onAutoResolveAll}
+                disabled={isAutoResolving}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs disabled:opacity-50 transition-all flex items-center gap-1.5 animate-pulse"
+                title="Automatically match and assign available floaters to all gaps"
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span>{isAutoResolving ? 'Auto-Filling...' : 'Auto-Resolve All'}</span>
+              </button>
+            )}
+
+            {/* Quick Add Entity Button (Section 3-A) */}
+            <button
+              onClick={onOpenQuickAdd}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 shadow-2xs transition-colors flex items-center gap-1"
+              title="Add a new Employee or Brand dynamically"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Add Entity</span>
+            </button>
+
             {/* What-If Simulator Button (Section 3-F) */}
             <button
               onClick={onOpenSimulator}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-sm transition-colors flex items-center gap-1.5"
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-colors flex items-center gap-1"
               title="Test sudden leave or brand requirement changes"
             >
               <span>🧪</span>
-              <span className="hidden sm:inline">Simulate Change</span>
+              <span className="hidden lg:inline">Simulate</span>
             </button>
 
             {/* Conflict Drawer Trigger Button */}
             <button
               onClick={onOpenConflicts}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 criticalGapsCount > 0
                   ? 'bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100'
                   : 'bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100'
@@ -117,7 +145,7 @@ export default function Header({
             <button
               onClick={onOpenEntities}
               className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 border border-slate-200 transition-colors"
-              title="Inspect & manage brands, employees, and rules"
+              title="Inspect full brands & employee rule records"
             >
               <Database className="h-4 w-4" />
             </button>

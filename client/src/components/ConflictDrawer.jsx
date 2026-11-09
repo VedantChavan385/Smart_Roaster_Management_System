@@ -1,7 +1,15 @@
 import React from 'react';
 import { X, AlertTriangle, CheckCircle2, UserCheck, ShieldAlert, ArrowRight } from 'lucide-react';
 
-export default function ConflictDrawer({ isOpen, onClose, conflicts, month, onApplyFix, isApplying }) {
+export default function ConflictDrawer({ 
+  isOpen, 
+  onClose, 
+  conflicts, 
+  month, 
+  onApplyFix, 
+  onAutoResolveAll,
+  isApplying 
+}) {
   if (!isOpen) return null;
 
   return (
@@ -20,12 +28,24 @@ export default function ConflictDrawer({ isOpen, onClose, conflicts, month, onAp
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {conflicts.length > 0 && onAutoResolveAll && (
+              <button
+                onClick={onAutoResolveAll}
+                disabled={isApplying}
+                className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1"
+                title="Auto-fill available pod floaters for all detected gaps"
+              >
+                <span>⚡ Auto-Resolve All</span>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Drawer Content */}
