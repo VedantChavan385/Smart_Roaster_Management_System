@@ -5,6 +5,8 @@ import GuidedTourBar from './components/GuidedTourBar';
 import ConflictDrawer from './components/ConflictDrawer';
 import ChangeSimulatorModal from './components/ChangeSimulatorModal';
 import EntityManagementModal from './components/EntityManagementModal';
+import ShiftEditorModal from './components/ShiftEditorModal';
+import QuickAddEntityModal from './components/QuickAddEntityModal';
 
 import CompanyView from './views/CompanyView';
 import PodView from './views/PodView';
@@ -21,7 +23,8 @@ import {
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Zap
 } from 'lucide-react';
 
 export default function App() {
@@ -42,10 +45,20 @@ export default function App() {
   const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(true);
 
+  // UX Upgrade Modals
+  const [isShiftEditorOpen, setIsShiftEditorOpen] = useState(false);
+  const [activeShiftToEdit, setActiveShiftToEdit] = useState(null);
+  const [activeEmpToEdit, setActiveEmpToEdit] = useState(null);
+  const [isSavingShift, setIsSavingShift] = useState(false);
+
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isSubmittingEntity, setIsSubmittingEntity] = useState(false);
+
   // Loading states
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isApplyingFix, setIsApplyingFix] = useState(false);
+  const [isAutoResolving, setIsAutoResolving] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -107,7 +120,30 @@ export default function App() {
     }
   };
 
-  // Action: Apply Conflict Fix
+  // Action: 1-Click Auto-Resolve All Gaps
+  const handleAutoResolveAll = async () => {
+    try {
+      setIsAutoResolving(true);
+      const res = await fetch('/api/roster/auto-resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month })
+      }).then(r => r.json());
+
+      if (res.success) {
+        setRoster(res.data);
+        showNotification(res.message);
+      } else {
+        showNotification(res.error || 'Auto-resolve failed', 'error');
+      }
+    } catch (err) {
+      showNotification('Network error during auto-resolve.', 'error');
+    } finally {
+      setIsAutoResolving(false);
+    }
+  };
+
+  // Action: Apply Conflict Fix (Single gap)
   const handleApplyFix = async (conflictId, backupEmployeeId) => {
     try {
       setIsApplyingFix(true);
@@ -127,6 +163,85 @@ export default function App() {
       showNotification('Network error applying fix.', 'error');
     } finally {
       setIsApplyingFix(false);
+    }
+  };
+
+  // Action: Open Inline Shift Editor
+  const handleOpenShiftEditor = (shift, emp) => {
+    setActiveShiftToEdit(shift);
+    setActiveEmpToEdit(emp);
+    setIsShiftEditorOpen(true);
+  };
+
+  // Action: Save Manual Shift Override
+  const handleSaveShift = async (shiftPayload) => {
+    try {
+      setIsSavingShift(true);
+      const res = await fetch('/api/roster/update-shift', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ month, ...shiftPayload })
+      }).then(r => r.json());
+
+      if (res.success) {
+        setRoster(res.data);
+        setIsShiftEditorOpen(false);
+        showNotification(res.message);
+      } else {
+        showNotification(res.error || 'Failed to update shift', 'error');
+      }
+    } catch (err) {
+      showNotification('Network error updating shift.', 'error');
+    } finally {
+      setIsSavingShift(false);
+    }
+  };
+
+  // Action: Add Employee dynamically
+  const handleAddEmployee = async (empData) => {
+    try {
+      setIsSubmittingEntity(true);
+      const res = await fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(empData)
+      }).then(r => r.json());
+
+      if (res.success) {
+        await fetchAllData(month);
+        setIsQuickAddOpen(false);
+        showNotification(res.message);
+      } else {
+        showNotification(res.error || 'Failed to add employee', 'error');
+      }
+    } catch (err) {
+      showNotification('Error adding employee.', 'error');
+    } finally {
+      setIsSubmittingEntity(false);
+    }
+  };
+
+  // Action: Add Brand dynamically
+  const handleAddBrand = async (brandData) => {
+    try {
+      setIsSubmittingEntity(true);
+      const res = await fetch('/api/brands', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(brandData)
+      }).then(r => r.json());
+
+      if (res.success) {
+        await fetchAllData(month);
+        setIsQuickAddOpen(false);
+        showNotification(res.message);
+      } else {
+        showNotification(res.error || 'Failed to add brand', 'error');
+      }
+    } catch (err) {
+      showNotification('Error adding brand.', 'error');
+    } finally {
+      setIsSubmittingEntity(false);
     }
   };
 
@@ -220,8 +335,7 @@ export default function App() {
   };
 
   const handleTourScenario3 = () => {
-    setIsConflictDrawerOpen(true);
-    showNotification('Click "Assign" beside Meera Chawla to resolve the Nov 15 gap with 1 click!');
+    handleAutoResolveAll();
   };
 
   const handleTourScenario4 = () => {
@@ -243,6 +357,9 @@ export default function App() {
         onOpenConflicts={() => setIsConflictDrawerOpen(true)}
         onOpenSimulator={() => setIsSimulatorModalOpen(true)}
         onOpenEntities={() => setIsEntityModalOpen(true)}
+        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+        onAutoResolveAll={handleAutoResolveAll}
+        isAutoResolving={isAutoResolving}
         onResetSeed={handleResetSeed}
         isResetting={isResetting}
         onExportCSV={handleExportCSV}
@@ -293,13 +410,24 @@ export default function App() {
               </div>
             </div>
 
-            <button
-              onClick={() => setIsConflictDrawerOpen(true)}
-              className="px-3 py-1 rounded-md bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
-            >
-              <span>Review & Assign Backups</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleAutoResolveAll}
+                disabled={isAutoResolving}
+                className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span>{isAutoResolving ? 'Resolving...' : 'Auto-Resolve All'}</span>
+              </button>
+
+              <button
+                onClick={() => setIsConflictDrawerOpen(true)}
+                className="px-3 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs shadow-2xs transition-colors flex items-center gap-1"
+              >
+                <span>Review Gaps</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -389,6 +517,7 @@ export default function App() {
                 brands={brands}
                 pods={pods}
                 onSelectEmployee={handleSelectEmployeeForDrilldown}
+                onOpenShiftEditor={handleOpenShiftEditor}
               />
             )}
 
@@ -441,7 +570,8 @@ export default function App() {
         conflicts={roster?.conflicts || []}
         month={month}
         onApplyFix={handleApplyFix}
-        isApplying={isApplyingFix}
+        onAutoResolveAll={handleAutoResolveAll}
+        isApplying={isApplyingFix || isAutoResolving}
       />
 
       {/* Change Management Simulator Modal (Section 3-F) */}
@@ -463,6 +593,28 @@ export default function App() {
         employees={employees}
         pods={pods}
         holidays={holidays}
+      />
+
+      {/* Interactive Shift Editor Modal (UX Upgrade) */}
+      <ShiftEditorModal
+        isOpen={isShiftEditorOpen}
+        onClose={() => setIsShiftEditorOpen(false)}
+        shiftData={activeShiftToEdit}
+        employee={activeEmpToEdit}
+        brands={brands}
+        onSaveShift={handleSaveShift}
+        isSaving={isSavingShift}
+      />
+
+      {/* Quick Add Employee / Brand Modal (UX Upgrade) */}
+      <QuickAddEntityModal
+        isOpen={isQuickAddOpen}
+        onClose={() => setIsQuickAddOpen(false)}
+        pods={pods}
+        brands={brands}
+        onAddEmployee={handleAddEmployee}
+        onAddBrand={handleAddBrand}
+        isSubmitting={isSubmittingEntity}
       />
     </div>
   );
