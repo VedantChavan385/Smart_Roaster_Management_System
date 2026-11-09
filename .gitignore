@@ -7,6 +7,12 @@ dist/
 build/
 client/dist/
 
+# Local database cache
+server/data/
+data/
+*.json.bak
+db_store.json
+
 # Environment variables
 .env
 *.env
