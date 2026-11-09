@@ -99,6 +99,14 @@ class DataStore {
     }
     return employees;
   }
+  async addEmployee(employee) {
+    this.memoryData.employees.push(employee);
+    this.saveToFile();
+    if (this.isMongoConnected) {
+      await Employee.create(employee);
+    }
+    return employee;
+  }
   async updateEmployee(id, updateData) {
     const idx = this.memoryData.employees.findIndex(e => e.id === id);
     if (idx !== -1) {
@@ -126,6 +134,14 @@ class DataStore {
       await Brand.insertMany(brands);
     }
     return brands;
+  }
+  async addBrand(brand) {
+    this.memoryData.brands.push(brand);
+    this.saveToFile();
+    if (this.isMongoConnected) {
+      await Brand.create(brand);
+    }
+    return brand;
   }
   async updateBrand(id, updateData) {
     const idx = this.memoryData.brands.findIndex(b => b.id === id);

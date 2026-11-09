@@ -23,10 +23,76 @@ router.get('/brands', async (req, res) => {
   }
 });
 
+router.post('/brands', async (req, res) => {
+  try {
+    const { name, podId, category, staffingType, defaultOperatingCalendar, processes = [] } = req.body;
+    if (!name || !podId) {
+      return res.status(400).json({ success: false, error: 'Brand name and Pod are required.' });
+    }
+
+    const newBrand = {
+      id: `brand_${Date.now()}`,
+      name,
+      podId,
+      category: category || 'General D2C',
+      staffingType: staffingType || 'SINGLE_RESOURCE',
+      defaultOperatingCalendar: defaultOperatingCalendar || 'DAILY_EXCEPT_HOLIDAYS',
+      processes: processes.length > 0 ? processes : [
+        { processName: 'CS', operatingCalendar: defaultOperatingCalendar || 'DAILY_EXCEPT_HOLIDAYS', minStaffing: 1 }
+      ],
+      assignedEmployeeIds: []
+    };
+
+    await store.addBrand(newBrand);
+    res.json({ success: true, message: `Brand "${name}" added successfully.`, data: newBrand });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/employees', async (req, res) => {
   try {
     const employees = await store.getEmployees();
     res.json({ success: true, data: employees });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post('/employees', async (req, res) => {
+  try {
+    const { name, email, podId, skills = ['CS'], weeklyOffQuota = 1, preferredOffDays = [0], brandId } = req.body;
+    if (!name || !podId) {
+      return res.status(400).json({ success: false, error: 'Employee name and Pod are required.' });
+    }
+
+    const empId = `emp_${Date.now()}`;
+    const assignedBrands = brandId ? [{ brandId, processes: skills, isPrimary: true }] : [];
+
+    const newEmp = {
+      id: empId,
+      name,
+      email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@datastraw.io`,
+      podId,
+      skills,
+      assignedBrands,
+      weeklyOffQuota: parseInt(weeklyOffQuota, 10) || 1,
+      preferredOffDays: preferredOffDays || [0],
+      maxConsecutiveDays: 6
+    };
+
+    await store.addEmployee(newEmp);
+
+    // If assigned to a brand, update brand's assignedEmployeeIds
+    if (brandId) {
+      const brand = await store.getBrands().then(bList => bList.find(b => b.id === brandId));
+      if (brand) {
+        brand.assignedEmployeeIds = [...(brand.assignedEmployeeIds || []), empId];
+        await store.updateBrand(brandId, { assignedEmployeeIds: brand.assignedEmployeeIds });
+      }
+    }
+
+    res.json({ success: true, message: `Employee "${name}" onboarded successfully.`, data: newEmp });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -153,6 +219,104 @@ router.post('/roster/apply-fix', async (req, res) => {
     res.json({
       success: true,
       message: `Successfully assigned ${backupEmployee.name} as backup. Conflict resolved!`,
+      data: roster
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 4. One-Click Auto-Resolve All Conflicts
+router.post('/roster/auto-resolve', async (req, res) => {
+  try {
+    const { month = '2026-11' } = req.body;
+    const roster = await store.getRosterByMonth(month);
+    if (!roster) {
+      return res.status(404).json({ success: false, error: 'Roster not found.' });
+    }
+
+    let resolvedCount = 0;
+    for (const conflict of [...roster.conflicts]) {
+      if (conflict.suggestedResolutions && conflict.suggestedResolutions.length > 0) {
+        const topCandidate = conflict.suggestedResolutions[0];
+        const backupEmployeeId = topCandidate.backupEmployeeId;
+
+        const shiftIdx = roster.shifts.findIndex(
+          s => s.date === conflict.date && s.employeeId === backupEmployeeId
+        );
+
+        if (shiftIdx !== -1) {
+          roster.shifts[shiftIdx].brandId = conflict.brandId;
+          roster.shifts[shiftIdx].process = conflict.process;
+          roster.shifts[shiftIdx].status = 'WORKING';
+          roster.shifts[shiftIdx].isBackup = true;
+          roster.shifts[shiftIdx].notes = `Auto-assigned backup for ${conflict.brandName} (${conflict.process})`;
+        } else {
+          roster.shifts.push({
+            date: conflict.date,
+            employeeId: backupEmployeeId,
+            brandId: conflict.brandId,
+            process: conflict.process,
+            status: 'WORKING',
+            isBackup: true,
+            notes: `Auto-assigned backup for ${conflict.brandName} (${conflict.process})`
+          });
+        }
+        resolvedCount++;
+      }
+    }
+
+    // Remove resolved conflicts
+    roster.conflicts = roster.conflicts.filter(c => !c.suggestedResolutions || c.suggestedResolutions.length === 0);
+    roster.metadata.criticalGapsCount = roster.conflicts.filter(c => c.severity === 'CRITICAL').length;
+    roster.metadata.coverageRate = roster.metadata.criticalGapsCount === 0 
+      ? 100 
+      : Math.max(75, Math.round(100 - (roster.metadata.criticalGapsCount * 2.5)));
+
+    await store.saveRoster(roster);
+
+    res.json({
+      success: true,
+      message: `⚡ Auto-resolved ${resolvedCount} coverage gap(s) with best-fit pod backups!`,
+      data: roster
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// 5. Update Shift Manually (Inline Cell Editing)
+router.post('/roster/update-shift', async (req, res) => {
+  try {
+    const { month = '2026-11', employeeId, date, status, brandId, process, notes } = req.body;
+    const roster = await store.getRosterByMonth(month);
+    if (!roster) {
+      return res.status(404).json({ success: false, error: 'Roster not found.' });
+    }
+
+    const shiftIdx = roster.shifts.findIndex(s => s.date === date && s.employeeId === employeeId);
+    if (shiftIdx !== -1) {
+      roster.shifts[shiftIdx].status = status;
+      roster.shifts[shiftIdx].brandId = brandId || null;
+      roster.shifts[shiftIdx].process = process || null;
+      if (notes) roster.shifts[shiftIdx].notes = notes;
+    } else {
+      roster.shifts.push({
+        date,
+        employeeId,
+        status,
+        brandId: brandId || null,
+        process: process || null,
+        isBackup: false,
+        notes: notes || 'Manual shift update'
+      });
+    }
+
+    await store.saveRoster(roster);
+
+    res.json({
+      success: true,
+      message: `Shift on ${date} updated successfully.`,
       data: roster
     });
   } catch (err) {
