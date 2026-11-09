@@ -1,0 +1,14 @@
+{
+  "name": "datastraw-smart-roster",
+  "version": "1.0.0",
+  "description": "Smart Roster Management System for Multi-Brand D2C Operations",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "server": "npm --prefix server run dev",
+    "client": "npm --prefix client run dev",
+    "seed": "npm --prefix server run seed"
+  },
+  "keywords": ["roster", "scheduling", "operations", "workforce-management"],
+  "author": "",
+  "license": "MIT"
+}
