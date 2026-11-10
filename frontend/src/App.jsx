@@ -94,27 +94,17 @@ function MainAppContent() {
 
       case 'employees':
         return (
-          <div className="space-y-6">
-            <PageHeader
-              title="Employee Management"
-              subtitle="Directory of active team members, skill qualifications, weekly off quotas, and brand assignments."
-              badge={`${employees.length} Staff Members`}
-              badgeVariant="indigo"
-              breadcrumbs={[{ label: 'Workspace' }, { label: 'Employees' }]}
-            />
-            <EmployeeView
-              roster={roster}
-              employees={employees}
-              brands={brands}
-              pods={pods}
-              selectedEmployeeId={selectedEmployeeId}
-              onSelectEmployee={(id) => setSelectedEmployeeId(id)}
-            />
-          </div>
+          <EmployeeView
+            selectedEmployeeId={selectedEmployeeId}
+            onSelectEmployee={(id) => setSelectedEmployeeId(id)}
+          />
         );
 
       case 'companies':
         return <CompanyDirectoryView />;
+
+      case 'pods':
+        return <PodView onSelectEmployee={(id) => setSelectedEmployeeId(id)} />;
 
       case 'brand-coverage':
         return (
@@ -146,26 +136,6 @@ function MainAppContent() {
               employees={employees}
               pods={pods}
               onResolveConflict={() => setIsConflictDrawerOpen(true)}
-            />
-          </div>
-        );
-
-      case 'pods':
-        return (
-          <div className="space-y-6">
-            <PageHeader
-              title="Pods & Teams"
-              subtitle="Cross-brand pod clusters providing dedicated and backup support."
-              badge={`${pods.length} Active Pods`}
-              badgeVariant="purple"
-              breadcrumbs={[{ label: 'Workspace' }, { label: 'Pods & Teams' }]}
-            />
-            <PodView
-              roster={roster}
-              employees={employees}
-              brands={brands}
-              pods={pods}
-              onSelectEmployee={handleSelectEmployeeForDrilldown}
             />
           </div>
         );
