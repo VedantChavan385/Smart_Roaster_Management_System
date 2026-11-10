@@ -16,6 +16,7 @@ import ProcessView from './views/ProcessView';
 import EmployeeView from './views/EmployeeView';
 import OverviewView from './views/OverviewView';
 import RosterSchedulingView from './views/RosterSchedulingView';
+import CompanyDirectoryView from './views/CompanyDirectoryView';
 
 import {
   Sparkles,
@@ -113,17 +114,19 @@ function MainAppContent() {
         );
 
       case 'companies':
+        return <CompanyDirectoryView />;
+
       case 'brand-coverage':
         return (
           <div className="space-y-6">
             <PageHeader
-              title={activeView === 'companies' ? 'Client Companies & Brands' : 'Brand Coverage Matrix'}
+              title="Brand Coverage Matrix"
               subtitle="Monitor SLA coverage across all 14 D2C brand accounts with single-resource enforcement."
               badge={`${brands.length} Client Accounts`}
               badgeVariant="blue"
               breadcrumbs={[
-                { label: activeView === 'companies' ? 'Workspace' : 'Operations' },
-                { label: activeView === 'companies' ? 'Client Companies' : 'Brand Coverage' },
+                { label: 'Operations' },
+                { label: 'Brand Coverage' },
               ]}
               actions={
                 <Button
