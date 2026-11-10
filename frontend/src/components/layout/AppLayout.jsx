@@ -4,14 +4,13 @@ import AppHeader from './AppHeader';
 import GuidedTourBar from '../GuidedTourBar';
 import ConflictDrawer from '../ConflictDrawer';
 import ChangeSimulatorModal from '../ChangeSimulatorModal';
-import EntityManagementModal from '../EntityManagementModal';
-import ShiftEditorModal from '../ShiftEditorModal';
+import ShiftDrawer from '../ShiftDrawer';
 import QuickAddEntityModal from '../QuickAddEntityModal';
 import CommandPalette from '../CommandPalette';
 import ToastContainer from '../ui/ToastContainer';
 import { useRoster } from '../../context/RosterContext';
 import { useNavigation } from '../../context/NavigationContext';
-import { AlertCircle, CheckCircle2, AlertTriangle, Zap, ArrowRight } from 'lucide-react';
+import { AlertTriangle, Zap, ArrowRight } from 'lucide-react';
 
 export default function AppLayout({ children }) {
   const {
@@ -30,8 +29,6 @@ export default function AppLayout({ children }) {
     setIsConflictDrawerOpen,
     isSimulatorModalOpen,
     setIsSimulatorModalOpen,
-    isEntityModalOpen,
-    setIsEntityModalOpen,
     isShiftEditorOpen,
     setIsShiftEditorOpen,
     activeShiftToEdit,
@@ -52,7 +49,7 @@ export default function AppLayout({ children }) {
     showNotification,
   } = useRoster();
 
-  const { setActiveView } = useNavigation();
+  const { setActiveView, activeView } = useNavigation();
 
   // Quick Tour triggers
   const handleTourScenario1 = () => {
@@ -98,8 +95,8 @@ export default function AppLayout({ children }) {
         {/* Scrollable Canvas */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            {/* Critical Gaps Alert Banner */}
-            {criticalGapsCount > 0 && (
+            {/* Critical Gaps Alert Banner (Scoped to Overview & Roster Views) */}
+            {criticalGapsCount > 0 && (activeView === 'overview' || activeView === 'roster') && (
               <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-lg bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center shrink-0">
@@ -165,16 +162,7 @@ export default function AppLayout({ children }) {
         isSimulating={isSimulating}
       />
 
-      <EntityManagementModal
-        isOpen={isEntityModalOpen}
-        onClose={() => setIsEntityModalOpen(false)}
-        brands={brands}
-        employees={employees}
-        pods={pods}
-        holidays={holidays}
-      />
-
-      <ShiftEditorModal
+      <ShiftDrawer
         isOpen={isShiftEditorOpen}
         onClose={() => setIsShiftEditorOpen(false)}
         shiftData={activeShiftToEdit}

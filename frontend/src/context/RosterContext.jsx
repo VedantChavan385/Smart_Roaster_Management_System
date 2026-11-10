@@ -18,8 +18,7 @@ export function RosterProvider({ children }) {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [isConflictDrawerOpen, setIsConflictDrawerOpen] = useState(false);
   const [isSimulatorModalOpen, setIsSimulatorModalOpen] = useState(false);
-  const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(true);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   // Shift Editor State
   const [isShiftEditorOpen, setIsShiftEditorOpen] = useState(false);
@@ -373,8 +372,6 @@ export function RosterProvider({ children }) {
     setIsConflictDrawerOpen,
     isSimulatorModalOpen,
     setIsSimulatorModalOpen,
-    isEntityModalOpen,
-    setIsEntityModalOpen,
     isGuideOpen,
     setIsGuideOpen,
     isShiftEditorOpen,

@@ -1,18 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { RosterProvider, useRoster } from './context/RosterContext';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import AppLayout from './components/layout/AppLayout';
 import PageHeader from './components/layout/PageHeader';
 import Button from './components/ui/Button';
 import Card from './components/ui/Card';
-import MetricCards from './components/MetricCards';
 import LoadingState from './components/ui/LoadingState';
-import EmptyState from './components/ui/EmptyState';
 
-import CompanyView from './views/CompanyView';
 import PodView from './views/PodView';
 import BrandView from './views/BrandView';
-import ProcessView from './views/ProcessView';
 import EmployeeView from './views/EmployeeView';
 import OverviewView from './views/OverviewView';
 import RosterSchedulingView from './views/RosterSchedulingView';
@@ -24,59 +20,24 @@ import AttendanceLeavesView from './views/AttendanceLeavesView';
 import RolesPermissionsView from './views/RolesPermissionsView';
 import SettingsView from './views/SettingsView';
 
-import {
-  Sparkles,
-  Zap,
-  Play,
-  RotateCcw,
-  Sliders,
-  FileSpreadsheet,
-  Building2,
-  Users,
-  Layers,
-  Activity,
-  User,
-  CalendarDays,
-  ShieldCheck,
-  AlertTriangle,
-  ArrowRight,
-  Info,
-} from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 function MainAppContent() {
   const {
     month,
-    roster,
     employees,
     brands,
     pods,
+    roster,
     isLoading,
-    isGenerating,
-    generateRoster,
     isAutoResolving,
     autoResolveAll,
-    exportCSV,
-    resetSeed,
-    isResetting,
-    setIsConflictDrawerOpen,
-    setIsSimulatorModalOpen,
-    setIsEntityModalOpen,
-    openShiftEditor,
     selectedEmployeeId,
     setSelectedEmployeeId,
-    criticalGapsCount,
+    setIsConflictDrawerOpen,
   } = useRoster();
 
-  const { activeView, setActiveView, currentNav } = useNavigation();
-
-  // Sub-tabs for Roster & Scheduling
-  const [rosterSubView, setRosterSubView] = useState('COMPANY'); // 'COMPANY' | 'PODS' | 'BRANDS' | 'PROCESSES' | 'EMPLOYEE'
-
-  const handleSelectEmployeeForDrilldown = (empId) => {
-    setSelectedEmployeeId(empId);
-    setRosterSubView('EMPLOYEE');
-    setActiveView('roster');
-  };
+  const { activeView } = useNavigation();
 
   if (isLoading) {
     return (
