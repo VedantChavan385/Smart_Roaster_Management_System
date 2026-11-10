@@ -25,3 +25,4 @@ export const rosterApi = {
   // Seed Reset
   resetSeed: () => apiRequest('/api/seed/reset', { method: 'POST' }),
 };
+
