@@ -6,9 +6,11 @@ node_modules/
 dist/
 build/
 client/dist/
+frontend/dist/
 
 # Local database cache
 server/data/
+backend/data/
 data/
 *.json.bak
 db_store.json
@@ -32,4 +34,3 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
-

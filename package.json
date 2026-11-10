@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "description": "Smart Roster Management System for Multi-Brand D2C Operations",
   "scripts": {
-    "install:all": "npm --prefix server install && npm --prefix client install",
-    "server": "npm --prefix server run dev",
-    "client": "npm --prefix client run dev",
-    "seed": "npm --prefix server run seed"
+    "install:all": "npm --prefix backend install && npm --prefix frontend install",
+    "server": "npm --prefix backend run dev",
+    "client": "npm --prefix frontend run dev",
+    "seed": "npm --prefix backend run seed",
+    "build": "npm --prefix frontend run build"
   },
   "keywords": ["roster", "scheduling", "operations", "workforce-management"],
   "author": "",
