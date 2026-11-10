@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import Header from './components/Header';
+import React, { useState } from 'react';
+import { RosterProvider, useRoster } from './context/RosterContext';
+import { NavigationProvider, useNavigation } from './context/NavigationContext';
+import AppLayout from './components/layout/AppLayout';
+import PageHeader from './components/layout/PageHeader';
+import Button from './components/ui/Button';
+import Card from './components/ui/Card';
 import MetricCards from './components/MetricCards';
-import GuidedTourBar from './components/GuidedTourBar';
-import ConflictDrawer from './components/ConflictDrawer';
-import ChangeSimulatorModal from './components/ChangeSimulatorModal';
-import EntityManagementModal from './components/EntityManagementModal';
-import ShiftEditorModal from './components/ShiftEditorModal';
-import QuickAddEntityModal from './components/QuickAddEntityModal';
+import LoadingState from './components/ui/LoadingState';
+import EmptyState from './components/ui/EmptyState';
 
 import CompanyView from './views/CompanyView';
 import PodView from './views/PodView';
@@ -14,608 +15,539 @@ import BrandView from './views/BrandView';
 import ProcessView from './views/ProcessView';
 import EmployeeView from './views/EmployeeView';
 
-import { 
-  Building2, 
-  Users, 
-  Layers, 
-  Activity, 
-  User, 
-  AlertCircle,
-  CheckCircle2,
+import {
+  Sparkles,
+  Zap,
+  Play,
+  RotateCcw,
+  Sliders,
+  FileSpreadsheet,
+  Building2,
+  Users,
+  Layers,
+  Activity,
+  User,
+  CalendarDays,
+  ShieldCheck,
   AlertTriangle,
   ArrowRight,
-  Zap
+  Info,
 } from 'lucide-react';
 
-export default function App() {
-  const [month, setMonth] = useState('2026-11');
-  const [activeView, setActiveView] = useState('COMPANY'); // 'COMPANY' | 'PODS' | 'BRANDS' | 'PROCESSES' | 'EMPLOYEE'
+function MainAppContent() {
+  const {
+    month,
+    roster,
+    employees,
+    brands,
+    pods,
+    isLoading,
+    isGenerating,
+    generateRoster,
+    isAutoResolving,
+    autoResolveAll,
+    exportCSV,
+    resetSeed,
+    isResetting,
+    setIsConflictDrawerOpen,
+    setIsSimulatorModalOpen,
+    setIsEntityModalOpen,
+    openShiftEditor,
+    selectedEmployeeId,
+    setSelectedEmployeeId,
+    criticalGapsCount,
+  } = useRoster();
 
-  // Data states
-  const [roster, setRoster] = useState(null);
-  const [employees, setEmployees] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [pods, setPods] = useState([]);
-  const [holidays, setHolidays] = useState([]);
+  const { activeView, setActiveView, currentNav } = useNavigation();
 
-  // UI / Modal states
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
-  const [isConflictDrawerOpen, setIsConflictDrawerOpen] = useState(false);
-  const [isSimulatorModalOpen, setIsSimulatorModalOpen] = useState(false);
-  const [isEntityModalOpen, setIsEntityModalOpen] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(true);
-
-  // UX Upgrade Modals
-  const [isShiftEditorOpen, setIsShiftEditorOpen] = useState(false);
-  const [activeShiftToEdit, setActiveShiftToEdit] = useState(null);
-  const [activeEmpToEdit, setActiveEmpToEdit] = useState(null);
-  const [isSavingShift, setIsSavingShift] = useState(false);
-
-  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [isSubmittingEntity, setIsSubmittingEntity] = useState(false);
-
-  // Loading states
-  const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isApplyingFix, setIsApplyingFix] = useState(false);
-  const [isAutoResolving, setIsAutoResolving] = useState(false);
-  const [isResetting, setIsResetting] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [notification, setNotification] = useState(null);
-
-  const showNotification = (msg, type = 'success') => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  // Initial Data Fetching
-  const fetchAllData = async (targetMonth = month) => {
-    try {
-      setIsLoading(true);
-      const [podsRes, brandsRes, empRes, holRes, rosterRes] = await Promise.all([
-        fetch('/api/pods').then(r => r.json()),
-        fetch('/api/brands').then(r => r.json()),
-        fetch('/api/employees').then(r => r.json()),
-        fetch('/api/holidays').then(r => r.json()),
-        fetch(`/api/roster/${targetMonth}`).then(r => r.json())
-      ]);
-
-      if (podsRes.success) setPods(podsRes.data);
-      if (brandsRes.success) setBrands(brandsRes.data);
-      if (empRes.success) setEmployees(empRes.data);
-      if (holRes.success) setHolidays(holRes.data);
-      if (rosterRes.success) setRoster(rosterRes.data);
-    } catch (err) {
-      console.error('Failed to fetch initial data:', err);
-      showNotification('Failed to load roster data from server.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllData(month);
-  }, [month]);
-
-  // Action: Generate Roster
-  const handleGenerateRoster = async () => {
-    try {
-      setIsGenerating(true);
-      const res = await fetch('/api/roster/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month })
-      }).then(r => r.json());
-
-      if (res.success) {
-        setRoster(res.data);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Generation failed', 'error');
-      }
-    } catch (err) {
-      showNotification('Network error during generation.', 'error');
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Action: 1-Click Auto-Resolve All Gaps
-  const handleAutoResolveAll = async () => {
-    try {
-      setIsAutoResolving(true);
-      const res = await fetch('/api/roster/auto-resolve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month })
-      }).then(r => r.json());
-
-      if (res.success) {
-        setRoster(res.data);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Auto-resolve failed', 'error');
-      }
-    } catch (err) {
-      showNotification('Network error during auto-resolve.', 'error');
-    } finally {
-      setIsAutoResolving(false);
-    }
-  };
-
-  // Action: Apply Conflict Fix (Single gap)
-  const handleApplyFix = async (conflictId, backupEmployeeId) => {
-    try {
-      setIsApplyingFix(true);
-      const res = await fetch('/api/roster/apply-fix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, conflictId, backupEmployeeId })
-      }).then(r => r.json());
-
-      if (res.success) {
-        setRoster(res.data);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Failed to apply resolution.', 'error');
-      }
-    } catch (err) {
-      showNotification('Network error applying fix.', 'error');
-    } finally {
-      setIsApplyingFix(false);
-    }
-  };
-
-  // Action: Open Inline Shift Editor
-  const handleOpenShiftEditor = (shift, emp) => {
-    setActiveShiftToEdit(shift);
-    setActiveEmpToEdit(emp);
-    setIsShiftEditorOpen(true);
-  };
-
-  // Action: Save Manual Shift Override
-  const handleSaveShift = async (shiftPayload) => {
-    try {
-      setIsSavingShift(true);
-      const res = await fetch('/api/roster/update-shift', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month, ...shiftPayload })
-      }).then(r => r.json());
-
-      if (res.success) {
-        setRoster(res.data);
-        setIsShiftEditorOpen(false);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Failed to update shift', 'error');
-      }
-    } catch (err) {
-      showNotification('Network error updating shift.', 'error');
-    } finally {
-      setIsSavingShift(false);
-    }
-  };
-
-  // Action: Add Employee dynamically
-  const handleAddEmployee = async (empData) => {
-    try {
-      setIsSubmittingEntity(true);
-      const res = await fetch('/api/employees', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(empData)
-      }).then(r => r.json());
-
-      if (res.success) {
-        await fetchAllData(month);
-        setIsQuickAddOpen(false);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Failed to add employee', 'error');
-      }
-    } catch (err) {
-      showNotification('Error adding employee.', 'error');
-    } finally {
-      setIsSubmittingEntity(false);
-    }
-  };
-
-  // Action: Add Brand dynamically
-  const handleAddBrand = async (brandData) => {
-    try {
-      setIsSubmittingEntity(true);
-      const res = await fetch('/api/brands', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(brandData)
-      }).then(r => r.json());
-
-      if (res.success) {
-        await fetchAllData(month);
-        setIsQuickAddOpen(false);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Failed to add brand', 'error');
-      }
-    } catch (err) {
-      showNotification('Error adding brand.', 'error');
-    } finally {
-      setIsSubmittingEntity(false);
-    }
-  };
-
-  // Action: Run Change Simulation (Section 3-F)
-  const handleSimulateChange = async (simData) => {
-    try {
-      setIsSimulating(true);
-      const res = await fetch('/api/roster/simulate-change', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(simData)
-      }).then(r => r.json());
-
-      if (res.success) {
-        setRoster(res.data);
-        setIsSimulatorModalOpen(false);
-        setIsConflictDrawerOpen(true);
-        showNotification(res.message);
-      } else {
-        showNotification(res.error || 'Simulation failed.', 'error');
-      }
-    } catch (err) {
-      showNotification('Simulation error.', 'error');
-    } finally {
-      setIsSimulating(false);
-    }
-  };
-
-  // Action: Reset Database to Seed
-  const handleResetSeed = async () => {
-    if (!window.confirm('Reset all operational data back to the clean 32-employee seed dataset?')) return;
-    try {
-      setIsResetting(true);
-      const res = await fetch('/api/seed/reset', { method: 'POST' }).then(r => r.json());
-      if (res.success) {
-        await fetchAllData(month);
-        showNotification('Database successfully reset to realistic sample dataset.');
-      }
-    } catch (err) {
-      showNotification('Failed to reset dataset.', 'error');
-    } finally {
-      setIsResetting(false);
-    }
-  };
-
-  // Export CSV
-  const handleExportCSV = () => {
-    if (!roster || !roster.shifts) return;
-
-    const headers = ['Date', 'Employee ID', 'Employee Name', 'Brand', 'Process', 'Shift Status', 'Is Backup', 'Notes'];
-    const rows = roster.shifts.map(s => {
-      const emp = employees.find(e => e.id === s.employeeId);
-      const brand = brands.find(b => b.id === s.brandId);
-      return [
-        s.date,
-        s.employeeId,
-        `"${emp ? emp.name : s.employeeId}"`,
-        `"${brand ? brand.name : (s.brandId || '')}"`,
-        `"${s.process || ''}"`,
-        s.status,
-        s.isBackup ? 'Yes' : 'No',
-        `"${s.notes || ''}"`
-      ].join(',');
-    });
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Roster_${month}_Export.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showNotification(`Exported roster for ${month} to CSV.`);
-  };
+  // Sub-tabs for Roster & Scheduling
+  const [rosterSubView, setRosterSubView] = useState('COMPANY'); // 'COMPANY' | 'PODS' | 'BRANDS' | 'PROCESSES' | 'EMPLOYEE'
 
   const handleSelectEmployeeForDrilldown = (empId) => {
     setSelectedEmployeeId(empId);
-    setActiveView('EMPLOYEE');
+    setRosterSubView('EMPLOYEE');
+    setActiveView('roster');
   };
 
-  // Evaluator Quick Tour Handlers
-  const handleTourScenario1 = () => {
-    setActiveView('BRANDS');
-    showNotification('Switched to Brand Matrix: Observe the ~80% single-resource brands with dedicated staff.');
-  };
-
-  const handleTourScenario2 = () => {
-    setIsConflictDrawerOpen(true);
-    showNotification('Opening Conflicts Drawer: Inspecting Nov 15 leave coverage gap for GlowSkin.');
-  };
-
-  const handleTourScenario3 = () => {
-    handleAutoResolveAll();
-  };
-
-  const handleTourScenario4 = () => {
-    setIsSimulatorModalOpen(true);
-    showNotification('Testing Section 3-F: Simulate a sudden sick leave and observe instant gap detection.');
-  };
-
-  const criticalGapsCount = roster?.conflicts?.filter(c => c.severity === 'CRITICAL')?.length || 0;
-
-  return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans">
-      {/* Top Application Header */}
-      <Header
-        month={month}
-        setMonth={setMonth}
-        roster={roster}
-        onGenerate={handleGenerateRoster}
-        isGenerating={isGenerating}
-        onOpenConflicts={() => setIsConflictDrawerOpen(true)}
-        onOpenSimulator={() => setIsSimulatorModalOpen(true)}
-        onOpenEntities={() => setIsEntityModalOpen(true)}
-        onOpenQuickAdd={() => setIsQuickAddOpen(true)}
-        onAutoResolveAll={handleAutoResolveAll}
-        isAutoResolving={isAutoResolving}
-        onResetSeed={handleResetSeed}
-        isResetting={isResetting}
-        onExportCSV={handleExportCSV}
-        onToggleGuide={() => setIsGuideOpen(!isGuideOpen)}
-        isGuideOpen={isGuideOpen}
-      />
-
-      {/* Evaluator Guided Tour Bar */}
-      {isGuideOpen && (
-        <GuidedTourBar
-          onRunScenario1={handleTourScenario1}
-          onRunScenario2={handleTourScenario2}
-          onRunScenario3={handleTourScenario3}
-          onRunScenario4={handleTourScenario4}
-          onClose={() => setIsGuideOpen(false)}
+  if (isLoading) {
+    return (
+      <Card className="p-12">
+        <LoadingState
+          title="Connecting to Smart Roster Solver"
+          message={`Retrieving workforce constraints, ${employees.length || 32} staff profiles and active rosters for ${month}...`}
         />
-      )}
+      </Card>
+    );
+  }
 
-      {/* Main Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
-        {/* Toast Notification */}
-        {notification && (
-          <div className={`p-3.5 rounded-xl text-xs font-bold flex items-center justify-between border shadow-sm animate-fade-in ${
-            notification.type === 'error'
-              ? 'bg-rose-50 text-rose-800 border-rose-200'
-              : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-          }`}>
-            <div className="flex items-center gap-2">
-              {notification.type === 'error' ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-              <span>{notification.msg}</span>
+  // RENDER PER ACTIVE NAVIGATION ROUTE
+  const renderViewContent = () => {
+    switch (activeView) {
+      case 'overview':
+      case 'roster':
+        return (
+          <div className="space-y-6">
+            {/* Page Header */}
+            <PageHeader
+              title={activeView === 'overview' ? 'Operations Overview' : 'Roster & Scheduling'}
+              subtitle="Multi-brand workforce scheduling matrix with automated constraint solving and backup coverage."
+              badge={`${month} Schedule`}
+              badgeVariant="indigo"
+              breadcrumbs={[
+                { label: 'Workspace' },
+                { label: activeView === 'overview' ? 'Overview' : 'Roster & Scheduling' },
+              ]}
+              actions={
+                <>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={FileSpreadsheet}
+                    onClick={exportCSV}
+                  >
+                    Export CSV
+                  </Button>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={Sliders}
+                    onClick={() => setIsSimulatorModalOpen(true)}
+                  >
+                    Simulate
+                  </Button>
+
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={Sparkles}
+                    onClick={generateRoster}
+                    isLoading={isGenerating}
+                  >
+                    {isGenerating ? 'Solving...' : 'Generate Roster'}
+                  </Button>
+                </>
+              }
+            />
+
+            {/* Metric KPI Cards */}
+            <MetricCards
+              roster={roster}
+              employees={employees}
+              brands={brands}
+              pods={pods}
+            />
+
+            {/* Roster Perspective Tabs */}
+            <div className="bg-white p-1 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-1.5 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setRosterSubView('COMPANY')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                  rosterSubView === 'COMPANY'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Layers className="h-3.5 w-3.5" />
+                <span>Company-Wide View</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRosterSubView('PODS')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                  rosterSubView === 'PODS'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Users className="h-3.5 w-3.5" />
+                <span>Pod-Wise View ({pods.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRosterSubView('BRANDS')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                  rosterSubView === 'BRANDS'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Building2 className="h-3.5 w-3.5" />
+                <span>Brand Coverage Matrix ({brands.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRosterSubView('PROCESSES')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                  rosterSubView === 'PROCESSES'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <Activity className="h-3.5 w-3.5" />
+                <span>Process-Wise Staffing</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRosterSubView('EMPLOYEE')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap cursor-pointer ${
+                  rosterSubView === 'EMPLOYEE'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                }`}
+              >
+                <User className="h-3.5 w-3.5" />
+                <span>Employee-Wise Drilldown</span>
+              </button>
             </div>
-            <button onClick={() => setNotification(null)} className="text-slate-400 hover:text-slate-700">✕</button>
-          </div>
-        )}
 
-        {/* Action Needed Banner (if conflicts exist) */}
-        {criticalGapsCount > 0 && (
-          <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50 via-rose-50 to-amber-50 border border-amber-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
-                <AlertTriangle className="h-4 w-4" />
-              </span>
-              <div>
-                <strong className="text-slate-900 font-bold">Action Needed:</strong>{' '}
-                <span className="text-slate-700 font-medium">
-                  {criticalGapsCount} coverage gap(s) detected. Client operations are currently understaffed on specific days.
-                </span>
+            {/* Active View Container */}
+            <div>
+              {rosterSubView === 'COMPANY' && (
+                <CompanyView
+                  roster={roster}
+                  employees={employees}
+                  brands={brands}
+                  pods={pods}
+                  onSelectEmployee={handleSelectEmployeeForDrilldown}
+                  onOpenShiftEditor={openShiftEditor}
+                />
+              )}
+
+              {rosterSubView === 'PODS' && (
+                <PodView
+                  roster={roster}
+                  employees={employees}
+                  brands={brands}
+                  pods={pods}
+                  onSelectEmployee={handleSelectEmployeeForDrilldown}
+                />
+              )}
+
+              {rosterSubView === 'BRANDS' && (
+                <BrandView
+                  roster={roster}
+                  brands={brands}
+                  employees={employees}
+                  pods={pods}
+                  onResolveConflict={() => setIsConflictDrawerOpen(true)}
+                />
+              )}
+
+              {rosterSubView === 'PROCESSES' && (
+                <ProcessView
+                  roster={roster}
+                  brands={brands}
+                  employees={employees}
+                />
+              )}
+
+              {rosterSubView === 'EMPLOYEE' && (
+                <EmployeeView
+                  roster={roster}
+                  employees={employees}
+                  brands={brands}
+                  pods={pods}
+                  selectedEmployeeId={selectedEmployeeId}
+                  onSelectEmployee={(id) => setSelectedEmployeeId(id)}
+                />
+              )}
+            </div>
+          </div>
+        );
+
+      case 'employees':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Employee Management"
+              subtitle="Directory of active team members, skill qualifications, weekly off quotas, and brand assignments."
+              badge={`${employees.length} Staff Members`}
+              badgeVariant="indigo"
+              breadcrumbs={[{ label: 'Workspace' }, { label: 'Employees' }]}
+            />
+            <EmployeeView
+              roster={roster}
+              employees={employees}
+              brands={brands}
+              pods={pods}
+              selectedEmployeeId={selectedEmployeeId}
+              onSelectEmployee={(id) => setSelectedEmployeeId(id)}
+            />
+          </div>
+        );
+
+      case 'companies':
+      case 'brand-coverage':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title={activeView === 'companies' ? 'Client Companies & Brands' : 'Brand Coverage Matrix'}
+              subtitle="Monitor SLA coverage across all 14 D2C brand accounts with single-resource enforcement."
+              badge={`${brands.length} Client Accounts`}
+              badgeVariant="blue"
+              breadcrumbs={[
+                { label: activeView === 'companies' ? 'Workspace' : 'Operations' },
+                { label: activeView === 'companies' ? 'Client Companies' : 'Brand Coverage' },
+              ]}
+              actions={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={Zap}
+                  onClick={autoResolveAll}
+                  isLoading={isAutoResolving}
+                >
+                  Auto-Resolve Gaps
+                </Button>
+              }
+            />
+            <BrandView
+              roster={roster}
+              brands={brands}
+              employees={employees}
+              pods={pods}
+              onResolveConflict={() => setIsConflictDrawerOpen(true)}
+            />
+          </div>
+        );
+
+      case 'pods':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Pods & Teams"
+              subtitle="Cross-brand pod clusters providing dedicated and backup support."
+              badge={`${pods.length} Active Pods`}
+              badgeVariant="purple"
+              breadcrumbs={[{ label: 'Workspace' }, { label: 'Pods & Teams' }]}
+            />
+            <PodView
+              roster={roster}
+              employees={employees}
+              brands={brands}
+              pods={pods}
+              onSelectEmployee={handleSelectEmployeeForDrilldown}
+            />
+          </div>
+        );
+
+      case 'conflicts':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Conflicts & Gaps Center"
+              subtitle="Automated constraint violation diagnostics, leave coverage gaps, and 1-click resolution recommendations."
+              badge={`${criticalGapsCount} Active Issues`}
+              badgeVariant={criticalGapsCount > 0 ? 'rose' : 'emerald'}
+              breadcrumbs={[{ label: 'Operations' }, { label: 'Conflicts & Gaps' }]}
+              actions={
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={Zap}
+                  onClick={autoResolveAll}
+                  isLoading={isAutoResolving}
+                >
+                  Auto-Resolve All ({criticalGapsCount})
+                </Button>
+              }
+            />
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Active Operational Conflicts & Recommended Fixes
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={AlertTriangle}
+                    onClick={() => setIsConflictDrawerOpen(true)}
+                  >
+                    Open Diagnostic Drawer
+                  </Button>
+                </div>
+
+                {roster?.conflicts && roster.conflicts.length > 0 ? (
+                  <div className="space-y-3">
+                    {roster.conflicts.map((conflict) => (
+                      <div
+                        key={conflict.id}
+                        className="p-4 rounded-xl border border-rose-200/90 bg-rose-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 uppercase">
+                              {conflict.severity}
+                            </span>
+                            <span className="text-xs font-bold text-slate-900">
+                              {conflict.date} • {conflict.brandName} ({conflict.process})
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-600">{conflict.description}</p>
+                          {conflict.suggestedResolutions?.length > 0 && (
+                            <p className="text-xs text-indigo-700 font-medium">
+                              💡 Recommended Floater Backup: {conflict.suggestedResolutions[0].employeeName} ({conflict.suggestedResolutions[0].reason})
+                            </p>
+                          )}
+                        </div>
+
+                        <Button
+                          variant="success"
+                          size="sm"
+                          icon={Zap}
+                          onClick={() => setIsConflictDrawerOpen(true)}
+                        >
+                          Review & Resolve
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    icon={ShieldCheck}
+                    title="All Shift Slots Fully Covered"
+                    description="No coverage gaps or single-resource violations detected in this month's roster."
+                  />
+                )}
               </div>
-            </div>
+            </Card>
+          </div>
+        );
 
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleAutoResolveAll}
-                disabled={isAutoResolving}
-                className="px-3 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5"
+      case 'automation':
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title="Roster Automation & Solver"
+              subtitle="Execute high-performance constraint solver, test what-if operational disruptions, and manage rules."
+              badge="Deterministic Engine"
+              badgeVariant="emerald"
+              breadcrumbs={[{ label: 'Operations' }, { label: 'Roster Automation' }]}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <Card
+                title="Constraint Solver"
+                subtitle="Run 7-stage deterministic assignment algorithm"
+                actions={
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={Sparkles}
+                    onClick={generateRoster}
+                    isLoading={isGenerating}
+                  >
+                    Run Solver
+                  </Button>
+                }
               >
-                <Zap className="h-3.5 w-3.5 fill-current" />
-                <span>{isAutoResolving ? 'Resolving...' : 'Auto-Resolve All'}</span>
-              </button>
+                <div className="space-y-3 text-xs text-slate-600">
+                  <p>
+                    Re-evaluates dedicated single-resource brand staffing, off-day quotas, and dynamically allocates pod floaters.
+                  </p>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-700">
+                    Current coverage health:{' '}
+                    <strong className="text-emerald-700 font-bold">
+                      {roster?.metadata?.coverageRate || 75}%
+                    </strong>
+                  </div>
+                </div>
+              </Card>
 
-              <button
-                onClick={() => setIsConflictDrawerOpen(true)}
-                className="px-3 py-1 rounded-md bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs shadow-2xs transition-colors flex items-center gap-1"
+              <Card
+                title="What-If Disruption Simulator"
+                subtitle="Section 3-F Change Management"
+                actions={
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={Sliders}
+                    onClick={() => setIsSimulatorModalOpen(true)}
+                  >
+                    Open Simulator
+                  </Button>
+                }
               >
-                <span>Review Gaps</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+                <div className="space-y-3 text-xs text-slate-600">
+                  <p>
+                    Simulate unexpected medical absences, sudden attrition, or brand workload spikes to stress-test pod resilience.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setIsSimulatorModalOpen(true)}
+                  >
+                    Launch Simulation Modal
+                  </Button>
+                </div>
+              </Card>
             </div>
           </div>
-        )}
+        );
 
-        {/* Operational KPI Metric Cards */}
-        <MetricCards
-          roster={roster}
-          employees={employees}
-          brands={brands}
-          pods={pods}
-        />
-
-        {/* View Switcher Tabs (Section 3-E) */}
-        <div className="flex border-b border-slate-200 gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setActiveView('COMPANY')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeView === 'COMPANY'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white bg-slate-100/60'
-            }`}
-          >
-            <Layers className="h-3.5 w-3.5" />
-            <span>Company-Wide View</span>
-          </button>
-
-          <button
-            onClick={() => setActiveView('PODS')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeView === 'PODS'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white bg-slate-100/60'
-            }`}
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span>Pod-Wise View ({pods.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveView('BRANDS')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeView === 'BRANDS'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white bg-slate-100/60'
-            }`}
-          >
-            <Building2 className="h-3.5 w-3.5" />
-            <span>Brand Coverage Matrix ({brands.length})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveView('PROCESSES')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeView === 'PROCESSES'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white bg-slate-100/60'
-            }`}
-          >
-            <Activity className="h-3.5 w-3.5" />
-            <span>Process-Wise Staffing</span>
-          </button>
-
-          <button
-            onClick={() => setActiveView('EMPLOYEE')}
-            className={`px-4 py-2 text-xs font-bold rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-              activeView === 'EMPLOYEE'
-                ? 'bg-indigo-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white bg-slate-100/60'
-            }`}
-          >
-            <User className="h-3.5 w-3.5" />
-            <span>Employee-Wise View</span>
-          </button>
-        </div>
-
-        {/* View Contents */}
-        {isLoading ? (
-          <div className="p-16 text-center text-slate-500 space-y-2">
-            <div className="h-8 w-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-xs font-medium">Initializing Smart Roster System & Constraint Solver...</p>
+      case 'leaves':
+      case 'reports':
+      case 'roles':
+      case 'settings':
+      default:
+        return (
+          <div className="space-y-6">
+            <PageHeader
+              title={currentNav.label}
+              subtitle={currentNav.description}
+              badge="Module Active"
+              badgeVariant="slate"
+              breadcrumbs={[{ label: currentNav.section }, { label: currentNav.label }]}
+            />
+            <Card className="p-8 text-center">
+              <div className="max-w-md mx-auto space-y-3">
+                <div className="h-12 w-12 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
+                  <Sparkles className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900">{currentNav.label} Ready for Phase Expansion</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  The enterprise navigation shell and state architecture for this section are active. You can review live rosters and brand matrices right now.
+                </p>
+                <div className="pt-2 flex items-center justify-center gap-2">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    icon={CalendarDays}
+                    onClick={() => setActiveView('roster')}
+                  >
+                    Go to Roster & Scheduling
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={Layers}
+                    onClick={() => setActiveView('brand-coverage')}
+                  >
+                    View Brand Matrix
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
-        ) : (
-          <div>
-            {activeView === 'COMPANY' && (
-              <CompanyView
-                roster={roster}
-                employees={employees}
-                brands={brands}
-                pods={pods}
-                onSelectEmployee={handleSelectEmployeeForDrilldown}
-                onOpenShiftEditor={handleOpenShiftEditor}
-              />
-            )}
+        );
+    }
+  };
 
-            {activeView === 'PODS' && (
-              <PodView
-                roster={roster}
-                employees={employees}
-                brands={brands}
-                pods={pods}
-                onSelectEmployee={handleSelectEmployeeForDrilldown}
-              />
-            )}
+  return <AppLayout>{renderViewContent()}</AppLayout>;
+}
 
-            {activeView === 'BRANDS' && (
-              <BrandView
-                roster={roster}
-                brands={brands}
-                employees={employees}
-                pods={pods}
-                onResolveConflict={() => setIsConflictDrawerOpen(true)}
-              />
-            )}
-
-            {activeView === 'PROCESSES' && (
-              <ProcessView
-                roster={roster}
-                brands={brands}
-                employees={employees}
-              />
-            )}
-
-            {activeView === 'EMPLOYEE' && (
-              <EmployeeView
-                roster={roster}
-                employees={employees}
-                brands={brands}
-                pods={pods}
-                selectedEmployeeId={selectedEmployeeId}
-                onSelectEmployee={(id) => setSelectedEmployeeId(id)}
-              />
-            )}
-          </div>
-        )}
-      </main>
-
-      {/* Slide-over Conflict Diagnostics Drawer */}
-      <ConflictDrawer
-        isOpen={isConflictDrawerOpen}
-        onClose={() => setIsConflictDrawerOpen(false)}
-        conflicts={roster?.conflicts || []}
-        month={month}
-        onApplyFix={handleApplyFix}
-        onAutoResolveAll={handleAutoResolveAll}
-        isApplying={isApplyingFix || isAutoResolving}
-      />
-
-      {/* Change Management Simulator Modal (Section 3-F) */}
-      <ChangeSimulatorModal
-        isOpen={isSimulatorModalOpen}
-        onClose={() => setIsSimulatorModalOpen(false)}
-        employees={employees}
-        brands={brands}
-        month={month}
-        onSimulate={handleSimulateChange}
-        isSimulating={isSimulating}
-      />
-
-      {/* Entity Rules Manager Modal (Section 3-A) */}
-      <EntityManagementModal
-        isOpen={isEntityModalOpen}
-        onClose={() => setIsEntityModalOpen(false)}
-        brands={brands}
-        employees={employees}
-        pods={pods}
-        holidays={holidays}
-      />
-
-      {/* Interactive Shift Editor Modal (UX Upgrade) */}
-      <ShiftEditorModal
-        isOpen={isShiftEditorOpen}
-        onClose={() => setIsShiftEditorOpen(false)}
-        shiftData={activeShiftToEdit}
-        employee={activeEmpToEdit}
-        brands={brands}
-        onSaveShift={handleSaveShift}
-        isSaving={isSavingShift}
-      />
-
-      {/* Quick Add Employee / Brand Modal (UX Upgrade) */}
-      <QuickAddEntityModal
-        isOpen={isQuickAddOpen}
-        onClose={() => setIsQuickAddOpen(false)}
-        pods={pods}
-        brands={brands}
-        onAddEmployee={handleAddEmployee}
-        onAddBrand={handleAddBrand}
-        isSubmitting={isSubmittingEntity}
-      />
-    </div>
+export default function App() {
+  return (
+    <NavigationProvider>
+      <RosterProvider>
+        <MainAppContent />
+      </RosterProvider>
+    </NavigationProvider>
   );
 }
