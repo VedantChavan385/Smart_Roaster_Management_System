@@ -43,7 +43,7 @@ function MainAppContent() {
     return (
       <Card className="p-12">
         <LoadingState
-          title="Connecting to Smart Roster Solver"
+          title="Connecting to DataStraw Solver"
           message={`Retrieving workforce constraints, ${employees.length || 32} staff profiles and active rosters for ${month}...`}
         />
       </Card>

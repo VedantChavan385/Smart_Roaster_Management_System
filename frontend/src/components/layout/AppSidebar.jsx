@@ -62,20 +62,24 @@ export default function AppSidebar() {
       {/* Brand Header */}
       <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800/80 bg-[#070d1e]">
         <div className="flex items-center gap-3 overflow-hidden">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-indigo-950 shrink-0 font-bold tracking-tight text-base">
-            <Sparkles className="h-5 w-5" />
+          <div className="h-9 w-9 rounded-xl bg-white flex items-center justify-center p-1 shadow-md shrink-0 border border-slate-300/30">
+            <img
+              src="/datastraw-logo.png"
+              alt="DataStraw"
+              className="h-full w-full object-contain"
+            />
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-bold text-sm tracking-tight text-white whitespace-nowrap">
-                  Smart Roster
+                <span className="font-extrabold text-sm tracking-tight text-white whitespace-nowrap">
+                  DataStraw
                 </span>
                 <span className="px-1.5 py-0.2 text-[10px] font-extrabold uppercase tracking-wider rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                  Engine
+                  Roster
                 </span>
               </div>
-              <span className="text-[11px] text-slate-400 truncate">Enterprise Operations</span>
+              <span className="text-[11px] text-slate-400 truncate">CX Operations Engine</span>
             </div>
           )}
         </div>

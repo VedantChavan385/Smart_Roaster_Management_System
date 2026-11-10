@@ -348,7 +348,7 @@ export function RosterProvider({ children }) {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `SmartRoster_${month}_Export.csv`);
+    link.setAttribute('download', `DataStraw_Roster_${month}_Export.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
