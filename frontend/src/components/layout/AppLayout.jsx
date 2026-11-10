@@ -7,6 +7,8 @@ import ChangeSimulatorModal from '../ChangeSimulatorModal';
 import EntityManagementModal from '../EntityManagementModal';
 import ShiftEditorModal from '../ShiftEditorModal';
 import QuickAddEntityModal from '../QuickAddEntityModal';
+import CommandPalette from '../CommandPalette';
+import ToastContainer from '../ui/ToastContainer';
 import { useRoster } from '../../context/RosterContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { AlertCircle, CheckCircle2, AlertTriangle, Zap, ArrowRight } from 'lucide-react';
@@ -20,8 +22,8 @@ export default function AppLayout({ children }) {
     pods,
     holidays,
     criticalGapsCount,
-    notification,
-    clearNotification,
+    toasts,
+    dismissToast,
     isGuideOpen,
     setIsGuideOpen,
     isConflictDrawerOpen,
@@ -96,33 +98,6 @@ export default function AppLayout({ children }) {
         {/* Scrollable Canvas */}
         <main className="flex-1 overflow-y-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-            {/* Global Toast Notification */}
-            {notification && (
-              <div
-                className={`p-3.5 rounded-xl text-xs font-semibold flex items-center justify-between border shadow-2xs animate-fade-in ${
-                  notification.type === 'error'
-                    ? 'bg-rose-50 text-rose-800 border-rose-200'
-                    : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  {notification.type === 'error' ? (
-                    <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  )}
-                  <span>{notification.msg}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={clearNotification}
-                  className="text-slate-400 hover:text-slate-700 ml-3 font-bold"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-
             {/* Critical Gaps Alert Banner */}
             {criticalGapsCount > 0 && (
               <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -218,6 +193,12 @@ export default function AppLayout({ children }) {
         onAddBrand={addBrand}
         isSubmitting={isSubmittingEntity}
       />
+
+      {/* Global Command Palette (Cmd+K) */}
+      <CommandPalette />
+
+      {/* Stacked Floating Notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

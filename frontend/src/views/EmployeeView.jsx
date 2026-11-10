@@ -6,6 +6,7 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import { useDebounce } from '../hooks/useDebounce';
 
 import {
   User,
@@ -54,7 +55,8 @@ export default function EmployeeView({
   const [viewMode, setViewMode] = useState(initialSelectedId ? 'PROFILE' : 'DIRECTORY');
 
   // Search & Filters
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const searchTerm = useDebounce(rawSearchTerm, 150);
   const [selectedPodId, setSelectedPodId] = useState('ALL');
   const [selectedSkill, setSelectedSkill] = useState('ALL');
   const [assignmentFilter, setAssignmentFilter] = useState('ALL'); // 'ALL' | 'DEDICATED' | 'FLOATERS'
@@ -211,9 +213,9 @@ export default function EmployeeView({
                 <input
                   type="text"
                   placeholder="Search by name, ID or email..."
-                  value={searchTerm}
+                  value={rawSearchTerm}
                   onChange={(e) => {
-                    setSearchTerm(e.target.value);
+                    setRawSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
                   className="w-full h-9 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"

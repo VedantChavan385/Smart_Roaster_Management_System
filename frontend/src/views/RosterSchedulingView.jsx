@@ -1,12 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRoster } from '../context/RosterContext';
 import { useNavigation } from '../context/NavigationContext';
 import PageHeader from '../components/layout/PageHeader';
 import DailyTimelineBar from '../components/DailyTimelineBar';
+import ShiftQuickPopover from '../components/ShiftQuickPopover';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Badge from '../components/ui/Badge';
 import EmptyState from '../components/ui/EmptyState';
+import { useDebounce } from '../hooks/useDebounce';
 
 import {
   Calendar,
@@ -43,9 +45,12 @@ export default function RosterSchedulingView() {
     isAutoResolving,
     exportCSV,
     openShiftEditor,
+    quickUpdateShift,
     setSelectedEmployeeId,
     setIsConflictDrawerOpen,
     setIsSimulatorModalOpen,
+    selectedDateFilter,
+    setSelectedDateFilter,
   } = useRoster();
 
   const { setActiveView } = useNavigation();
@@ -56,11 +61,22 @@ export default function RosterSchedulingView() {
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0); // 0 to 4 (weeks in month)
 
   // Filtering & Search
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const searchTerm = useDebounce(rawSearchTerm, 150);
   const [selectedPodId, setSelectedPodId] = useState('ALL');
   const [selectedBrandId, setSelectedBrandId] = useState('ALL');
   const [filterMode, setFilterMode] = useState('ALL'); // 'ALL' | 'LEAVES_ONLY' | 'FLOATERS_ONLY' | 'BACKUP_ONLY'
-  const [focusedDate, setFocusedDate] = useState(null);
+  const [focusedDate, setFocusedDate] = useState(selectedDateFilter || null);
+
+  // Quick Popover State
+  const [quickShiftTarget, setQuickShiftTarget] = useState(null); // { shift, emp }
+
+  useEffect(() => {
+    if (selectedDateFilter) {
+      setFocusedDate(selectedDateFilter);
+      setSelectedDateFilter(null);
+    }
+  }, [selectedDateFilter, setSelectedDateFilter]);
 
   // Derive unique sorted dates
   const allDates = useMemo(() => {
@@ -330,14 +346,14 @@ export default function RosterSchedulingView() {
         {/* Bottom Row: Search, Pod/Brand Selectors, Status Filters & Legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[320px]">
-            {/* Search Input */}
+            {/* Search Input (Debounced) */}
             <div className="relative min-w-[200px] flex-1 max-w-xs">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search staff, skill, ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={rawSearchTerm}
+                onChange={(e) => setRawSearchTerm(e.target.value)}
                 className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -543,7 +559,7 @@ export default function RosterSchedulingView() {
                         )}
                       </td>
 
-                      {/* Shift Cells with Click-to-Open Drawer */}
+                      {/* Shift Cells with Quick Popover (Single Click) or Detailed Drawer (Double Click) */}
                       {visibleDates.map((dateStr) => {
                         const shift = shiftLookup.get(`${dateStr}_${emp.id}`) || {
                           date: dateStr,
@@ -555,11 +571,12 @@ export default function RosterSchedulingView() {
                         return (
                           <td
                             key={dateStr}
-                            onClick={() => openShiftEditor(shift, emp)}
+                            onClick={() => setQuickShiftTarget({ shift, emp })}
+                            onDoubleClick={() => openShiftEditor(shift, emp)}
                             className={`px-1.5 py-2 text-center border-r border-slate-100 cursor-pointer transition-all hover:bg-indigo-50/70 hover:scale-105 ${
-                              isFocused ? 'bg-indigo-50/40' : ''
+                              isFocused ? 'bg-indigo-50/40 ring-1 ring-inset ring-indigo-400' : ''
                             }`}
-                            title={`Click to edit shift: ${emp.name} on ${dateStr}`}
+                            title={`Click to quick-assign shift: ${emp.name} on ${dateStr} (Double click for full drawer)`}
                           >
                             {renderShiftBadge(shift)}
                           </td>
@@ -577,7 +594,7 @@ export default function RosterSchedulingView() {
                       description="Try clearing search or changing the Pod filter."
                       actionLabel="Reset All Filters"
                       onAction={() => {
-                        setSearchTerm('');
+                        setRawSearchTerm('');
                         setSelectedPodId('ALL');
                         setSelectedBrandId('ALL');
                         setFilterMode('ALL');
@@ -590,6 +607,21 @@ export default function RosterSchedulingView() {
           </table>
         </div>
       </Card>
+
+      {/* Quick Shift Assignment Popover */}
+      {quickShiftTarget && (
+        <ShiftQuickPopover
+          isOpen={!!quickShiftTarget}
+          onClose={() => setQuickShiftTarget(null)}
+          shift={quickShiftTarget.shift}
+          employee={quickShiftTarget.emp}
+          brands={brands}
+          onQuickUpdate={(updatedPayload) =>
+            quickUpdateShift(updatedPayload, quickShiftTarget.shift)
+          }
+          onOpenFullDrawer={(shift, emp) => openShiftEditor(shift, emp)}
+        />
+      )}
     </div>
   );
 }

@@ -26,6 +26,10 @@ export function RosterProvider({ children }) {
   const [activeShiftToEdit, setActiveShiftToEdit] = useState(null);
   const [activeEmpToEdit, setActiveEmpToEdit] = useState(null);
 
+  // Command Palette & Global Modal States
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [selectedDateFilter, setSelectedDateFilter] = useState(null);
+
   // Quick Add Modal State
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
 
@@ -39,17 +43,33 @@ export function RosterProvider({ children }) {
   const [isSavingShift, setIsSavingShift] = useState(false);
   const [isSubmittingEntity, setIsSubmittingEntity] = useState(false);
 
-  // Notification State
-  const [notification, setNotification] = useState(null);
+  // Toast Notification Stack
+  const [toasts, setToasts] = useState([]);
 
-  const showNotification = (msg, type = 'success') => {
-    setNotification({ msg, type });
-    setTimeout(() => {
-      setNotification((curr) => (curr?.msg === msg ? null : curr));
-    }, 4500);
+  const dismissToast = (id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const clearNotification = () => setNotification(null);
+  const showToast = ({ msg, type = 'success', subtext = null, action = null, duration = 4500 }) => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+    const newToast = { id, msg, type, subtext, action };
+
+    setToasts((prev) => [...prev.slice(-3), newToast]); // keep max 4 toasts at a time
+
+    if (duration > 0) {
+      setTimeout(() => {
+        dismissToast(id);
+      }, duration);
+    }
+    return id;
+  };
+
+  // Backwards compatible showNotification
+  const showNotification = (msg, type = 'success') => {
+    showToast({ msg, type });
+  };
+
+  const clearNotification = () => setToasts([]);
 
   // Fetch all initial data
   const fetchData = async (targetMonth = month) => {
@@ -147,14 +167,91 @@ export function RosterProvider({ children }) {
       if (res.success) {
         setRoster(res.data);
         setIsShiftEditorOpen(false);
-        showNotification(res.message);
+        showToast({
+          msg: res.message || 'Shift assignment saved',
+          type: 'success',
+        });
       } else {
-        showNotification(res.error || 'Failed to update shift', 'error');
+        showToast({
+          msg: res.error || 'Failed to update shift',
+          type: 'error',
+        });
       }
     } catch (err) {
-      showNotification('Network error updating shift.', 'error');
+      showToast({
+        msg: 'Network error updating shift.',
+        type: 'error',
+      });
     } finally {
       setIsSavingShift(false);
+    }
+  };
+
+  // Optimistic Quick Update Shift with Undo Support
+  const handleQuickUpdateShift = async (shiftPayload, previousState = null) => {
+    // 1. In-memory optimistic update
+    if (roster && roster.shifts) {
+      const updatedShifts = roster.shifts.map((s) => {
+        if (s.date === shiftPayload.date && s.employeeId === shiftPayload.employeeId) {
+          return {
+            ...s,
+            status: shiftPayload.status,
+            brandId: shiftPayload.brandId !== undefined ? shiftPayload.brandId : s.brandId,
+            process: shiftPayload.process !== undefined ? shiftPayload.process : s.process,
+            notes: shiftPayload.notes !== undefined ? shiftPayload.notes : s.notes,
+          };
+        }
+        return s;
+      });
+      setRoster((prev) => ({ ...prev, shifts: updatedShifts }));
+    }
+
+    // 2. Server persistence in background
+    try {
+      const res = await rosterApi.updateShift({ month, ...shiftPayload });
+      if (res.success) {
+        setRoster(res.data);
+        if (previousState) {
+          showToast({
+            msg: `Shift updated for ${shiftPayload.date}`,
+            subtext: `Changed to ${shiftPayload.status}`,
+            type: 'success',
+            action: {
+              label: 'Undo',
+              onClick: () => handleQuickUpdateShift(previousState),
+            },
+          });
+        }
+      } else {
+        // Rollback
+        if (previousState && roster) {
+          const revertedShifts = roster.shifts.map((s) => {
+            if (s.date === previousState.date && s.employeeId === previousState.employeeId) {
+              return { ...s, ...previousState };
+            }
+            return s;
+          });
+          setRoster((prev) => ({ ...prev, shifts: revertedShifts }));
+        }
+        showToast({
+          msg: res.error || 'Failed to update shift',
+          type: 'error',
+        });
+      }
+    } catch (err) {
+      if (previousState && roster) {
+        const revertedShifts = roster.shifts.map((s) => {
+          if (s.date === previousState.date && s.employeeId === previousState.employeeId) {
+            return { ...s, ...previousState };
+          }
+          return s;
+        });
+        setRoster((prev) => ({ ...prev, shifts: revertedShifts }));
+      }
+      showToast({
+        msg: 'Network error updating shift. Reverted change.',
+        type: 'error',
+      });
     }
   };
 
@@ -295,9 +392,16 @@ export function RosterProvider({ children }) {
     isSimulating,
     isSavingShift,
     isSubmittingEntity,
-    notification,
+    notification: toasts[toasts.length - 1] || null,
+    toasts,
+    showToast,
+    dismissToast,
     showNotification,
     clearNotification,
+    isCommandPaletteOpen,
+    setIsCommandPaletteOpen,
+    selectedDateFilter,
+    setSelectedDateFilter,
     criticalGapsCount,
     // Operations
     fetchData,
@@ -305,6 +409,7 @@ export function RosterProvider({ children }) {
     autoResolveAll: handleAutoResolveAll,
     applyFix: handleApplyFix,
     saveShift: handleSaveShift,
+    quickUpdateShift: handleQuickUpdateShift,
     addEmployee: handleAddEmployee,
     addBrand: handleAddBrand,
     simulateChange: handleSimulateChange,

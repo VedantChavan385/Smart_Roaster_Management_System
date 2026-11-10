@@ -44,6 +44,7 @@ export default function AppHeader() {
     isGuideOpen,
     exportCSV,
     resetSeed,
+    setIsCommandPaletteOpen,
   } = useRoster();
 
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -118,27 +119,21 @@ export default function AppHeader() {
         </div>
       </div>
 
-      {/* Middle: Global Search Bar */}
+      {/* Middle: Global Search Bar (Triggers Command Palette) */}
       <div className="flex-1 max-w-md hidden md:block">
-        <div className="relative">
-          <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
-            type="text"
-            placeholder="Search employees, brands, pods, shifts... (Ctrl+K)"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
-            className={`w-full h-9 pl-9 pr-12 text-xs bg-slate-50/80 hover:bg-slate-100/70 focus:bg-white text-slate-900 placeholder:text-slate-500 rounded-lg border transition-all outline-hidden ${
-              isSearchFocused
-                ? 'border-indigo-500 ring-2 ring-indigo-500/10'
-                : 'border-slate-200'
-            }`}
-          />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 bg-slate-200/60 border border-slate-300/80 rounded shadow-2xs">
+        <button
+          type="button"
+          onClick={() => setIsCommandPaletteOpen(true)}
+          className="w-full relative text-left group cursor-pointer"
+        >
+          <Search className="h-4 w-4 text-slate-400 group-hover:text-indigo-600 transition-colors absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <div className="w-full h-9 pl-9 pr-12 text-xs bg-slate-50/80 hover:bg-slate-100 group-hover:border-indigo-400 text-slate-400 rounded-lg border border-slate-200 transition-all flex items-center shadow-2xs">
+            <span>Search commands, staff, brands, gaps...</span>
+          </div>
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-medium text-slate-500 bg-slate-200/60 border border-slate-300/80 rounded shadow-2xs group-hover:bg-indigo-50 group-hover:text-indigo-700 transition-colors">
             ⌘K
           </kbd>
-        </div>
+        </button>
       </div>
 
       {/* Right: Actions, Month Switcher, Tour Pill, Notifications & Profile */}

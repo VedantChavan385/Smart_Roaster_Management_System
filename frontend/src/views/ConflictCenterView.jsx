@@ -6,6 +6,7 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import { useDebounce } from '../hooks/useDebounce';
 
 import {
   AlertTriangle,
@@ -41,12 +42,15 @@ export default function ConflictCenterView() {
     isAutoResolving,
     setIsSimulatorModalOpen,
     openShiftEditor,
+    setSelectedEmployeeId,
+    setSelectedDateFilter,
   } = useRoster();
 
   const { setActiveView } = useNavigation();
 
-  // Search & Filters
-  const [searchTerm, setSearchTerm] = useState('');
+  // Search & Filters (Debounced)
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const searchTerm = useDebounce(rawSearchTerm, 150);
   const [selectedPodId, setSelectedPodId] = useState('ALL');
   const [selectedBrandId, setSelectedBrandId] = useState('ALL');
   const [severityFilter, setSeverityFilter] = useState('ALL'); // 'ALL' | 'CRITICAL' | 'WARNING'
@@ -199,17 +203,17 @@ export default function ConflictCenterView() {
       {/* 3. Filter Toolbar */}
       <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[300px]">
-          {/* Search */}
-          <div className="relative min-w-[200px] flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search by brand, process or date..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
+            {/* Search (Debounced) */}
+            <div className="relative min-w-[200px] flex-1 max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search by brand, process or date..."
+                value={rawSearchTerm}
+                onChange={(e) => setRawSearchTerm(e.target.value)}
+                className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
 
           {/* Pod Filter */}
           <select
@@ -300,13 +304,26 @@ export default function ConflictCenterView() {
                       {conflict.severity}
                     </span>
 
-                    <span className="font-mono text-xs font-bold text-slate-900 bg-slate-100 px-2.5 py-0.5 rounded">
-                      {conflict.date}
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDateFilter(conflict.date);
+                        setActiveView('roster');
+                      }}
+                      className="font-mono text-xs font-bold text-slate-900 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 px-2.5 py-0.5 rounded transition-colors cursor-pointer"
+                      title={`Jump to ${conflict.date} on Roster Schedule`}
+                    >
+                      {conflict.date} ↗
+                    </button>
 
-                    <h3 className="font-bold text-sm text-slate-900">
+                    <button
+                      type="button"
+                      onClick={() => setActiveView('brand-coverage')}
+                      className="font-bold text-sm text-slate-900 hover:text-indigo-600 transition-colors cursor-pointer text-left"
+                      title="View Brand Coverage SLA"
+                    >
                       {conflict.brandName}
-                    </h3>
+                    </button>
                   </div>
 
                   <div className="flex items-center gap-1.5">
@@ -340,7 +357,17 @@ export default function ConflictCenterView() {
                           <div className="min-w-0 pr-2">
                             <div className="font-bold text-slate-900 flex items-center gap-1.5 truncate">
                               <UserCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                              <span className="truncate">{res.backupEmployeeName}</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedEmployeeId(res.backupEmployeeId);
+                                  setActiveView('employees');
+                                }}
+                                className="truncate hover:text-indigo-600 transition-colors cursor-pointer text-left"
+                                title={`View ${res.backupEmployeeName}'s profile and weekly shifts`}
+                              >
+                                {res.backupEmployeeName}
+                              </button>
                             </div>
                             <span className="text-[10px] text-slate-500 block truncate mt-0.5">
                               {res.reason}

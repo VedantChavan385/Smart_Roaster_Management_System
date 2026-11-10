@@ -6,6 +6,7 @@ import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import EmptyState from '../components/ui/EmptyState';
+import { useDebounce } from '../hooks/useDebounce';
 
 import {
   Building2,
@@ -57,7 +58,8 @@ export default function CompanyDirectoryView() {
   const { setActiveView } = useNavigation();
 
   // Search & Filter state
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const searchTerm = useDebounce(rawSearchTerm, 150);
   const [selectedPodId, setSelectedPodId] = useState('ALL');
   const [staffingFilter, setStaffingFilter] = useState('ALL'); // 'ALL' | 'SINGLE_RESOURCE' | 'MULTI_RESOURCE'
   const [coverageFilter, setCoverageFilter] = useState('ALL'); // 'ALL' | 'GAPS_ONLY' | 'PERFECT_ONLY'
@@ -228,14 +230,14 @@ export default function CompanyDirectoryView() {
       {/* 3. Filter & View Switcher Toolbar */}
       <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[300px]">
-          {/* Search */}
+          {/* Search (Debounced) */}
           <div className="relative min-w-[220px] flex-1 max-w-xs">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search by company or category..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={rawSearchTerm}
+              onChange={(e) => setRawSearchTerm(e.target.value)}
               className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
             />
           </div>

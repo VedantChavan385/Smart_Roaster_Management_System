@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Building2, CheckCircle2, AlertTriangle, Filter, Search, ArrowRight, ShieldAlert } from 'lucide-react';
+import { useDebounce } from '../hooks/useDebounce';
 
 export default function BrandView({ roster, brands, employees, pods, onResolveConflict }) {
   const [selectedStaffingType, setSelectedStaffingType] = useState('ALL');
   const [filterGapsOnly, setFilterGapsOnly] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [rawSearchTerm, setRawSearchTerm] = useState('');
+  const searchTerm = useDebounce(rawSearchTerm, 150);
 
   if (!roster || !roster.shifts) {
     return <div className="p-8 text-center text-slate-500">No roster loaded.</div>;
@@ -59,14 +61,14 @@ export default function BrandView({ roster, brands, employees, pods, onResolveCo
       {/* Filters and Summary Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs">
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[280px]">
-          {/* Search */}
+          {/* Search (Debounced) */}
           <div className="relative min-w-[200px] flex-1 max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search brand name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={rawSearchTerm}
+              onChange={(e) => setRawSearchTerm(e.target.value)}
               className="w-full h-9 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
             />
           </div>
