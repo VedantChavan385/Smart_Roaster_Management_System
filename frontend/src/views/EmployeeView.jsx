@@ -207,7 +207,7 @@ export default function EmployeeView({
             <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[300px]">
               {/* Search */}
               <div className="relative min-w-[200px] flex-1 max-w-xs">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search by name, ID or email..."
@@ -216,7 +216,7 @@ export default function EmployeeView({
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                  className="w-full h-9 pl-9 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
@@ -227,7 +227,7 @@ export default function EmployeeView({
                   setSelectedPodId(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                className="h-9 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <option value="ALL">All Pods ({pods.length})</option>
                 {pods.map((p) => (
@@ -244,7 +244,7 @@ export default function EmployeeView({
                   setSelectedSkill(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                className="h-9 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <option value="ALL">All Skills</option>
                 <option value="CS">CS (Support)</option>
@@ -254,14 +254,14 @@ export default function EmployeeView({
               </select>
 
               {/* Assignment Filter */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg border border-slate-200">
                 <button
                   type="button"
                   onClick={() => setAssignmentFilter('ALL')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`h-8 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     assignmentFilter === 'ALL'
-                      ? 'bg-slate-800 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      ? 'bg-white text-slate-900 shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
                   All ({employees.length})
@@ -269,10 +269,10 @@ export default function EmployeeView({
                 <button
                   type="button"
                   onClick={() => setAssignmentFilter('DEDICATED')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`h-8 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     assignmentFilter === 'DEDICATED'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
+                      ? 'bg-amber-600 text-white shadow-2xs'
+                      : 'text-amber-800 hover:bg-amber-100/60'
                   }`}
                 >
                   Dedicated (80%)
@@ -280,10 +280,10 @@ export default function EmployeeView({
                 <button
                   type="button"
                   onClick={() => setAssignmentFilter('FLOATERS')}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                  className={`h-8 px-3 rounded-md text-xs font-bold transition-all cursor-pointer ${
                     assignmentFilter === 'FLOATERS'
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'text-indigo-800 hover:bg-indigo-100/60'
                   }`}
                 >
                   Floaters
@@ -291,7 +291,7 @@ export default function EmployeeView({
               </div>
             </div>
 
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-500 font-semibold">
               Showing {filteredEmployees.length} employee(s)
             </span>
           </div>
@@ -336,7 +336,7 @@ export default function EmployeeView({
                         >
                           {emp.name}
                         </button>
-                        <span className="text-[11px] text-slate-400 font-mono block">
+                        <span className="text-xs text-slate-500 font-mono block">
                           {emp.id} • {emp.pod ? emp.pod.name.split(' ')[1] : 'Unassigned'}
                         </span>
                       </div>
@@ -352,7 +352,7 @@ export default function EmployeeView({
                     {emp.skills?.map((s) => (
                       <span
                         key={s}
-                        className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200"
+                        className="px-2 py-0.5 rounded text-xs font-mono font-semibold bg-slate-100 text-slate-700 border border-slate-200"
                       >
                         {s}
                       </span>
@@ -378,25 +378,25 @@ export default function EmployeeView({
 
                   {/* Shift Stats Row */}
                   <div className="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800">
+                    <div className="p-2 rounded-lg bg-emerald-50 text-emerald-800">
                       <div className="font-bold text-sm">{emp.workingDays}</div>
-                      <div className="text-[9px] uppercase font-bold text-emerald-600">Working</div>
+                      <div className="text-[10px] uppercase font-bold tracking-wide text-emerald-600">Working</div>
                     </div>
 
-                    <div className="p-1.5 rounded-lg bg-slate-100 text-slate-700">
+                    <div className="p-2 rounded-lg bg-slate-100 text-slate-700">
                       <div className="font-bold text-sm">{emp.offDays}</div>
-                      <div className="text-[9px] uppercase font-bold text-slate-500">Off Days</div>
+                      <div className="text-[10px] uppercase font-bold tracking-wide text-slate-500">Off Days</div>
                     </div>
 
-                    <div className="p-1.5 rounded-lg bg-amber-50 text-amber-800">
+                    <div className="p-2 rounded-lg bg-amber-50 text-amber-800">
                       <div className="font-bold text-sm">{emp.leaveDays}</div>
-                      <div className="text-[9px] uppercase font-bold text-amber-600">Leaves</div>
+                      <div className="text-[10px] uppercase font-bold tracking-wide text-amber-600">Leaves</div>
                     </div>
                   </div>
 
                   {/* Profile Drilldown Action */}
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {emp.email}
                     </span>
                     <button
@@ -447,7 +447,7 @@ export default function EmployeeView({
           <div className="space-y-6">
             {/* Employee Quick Switcher */}
             <div className="bg-white p-3.5 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 <label htmlFor="staff-profile-selector" className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Switch Staff Profile:
                 </label>
@@ -455,7 +455,7 @@ export default function EmployeeView({
                   id="staff-profile-selector"
                   value={activeEmployee.id}
                   onChange={(e) => setSelectedEmpId(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer"
+                  className="h-9 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 px-3 focus:ring-2 focus:ring-indigo-500 font-semibold cursor-pointer"
                 >
                   {employees.map((emp) => (
                     <option key={emp.id} value={emp.id}>
@@ -517,7 +517,7 @@ export default function EmployeeView({
                       {activeEmployee.skills?.map((s) => (
                         <span
                           key={s}
-                          className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono font-bold text-[10px] border border-indigo-200"
+                          className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono font-bold text-xs border border-indigo-200"
                         >
                           {s}
                         </span>
@@ -537,43 +537,43 @@ export default function EmployeeView({
               {/* Attendance & Shift Breakdown Metrics */}
               <div className="lg:col-span-2 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
                 <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Working Shifts
                   </span>
                   <div className="text-3xl font-extrabold text-emerald-600 mt-2">
                     {activeEmpStats.workingDays}
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1">Scheduled in {month}</span>
+                  <span className="text-xs text-slate-400 mt-1">Scheduled in {month}</span>
                 </div>
 
                 <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Weekly Offs
                   </span>
                   <div className="text-3xl font-extrabold text-slate-700 mt-2">
                     {activeEmpStats.offDays}
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1">Guaranteed off quota</span>
+                  <span className="text-xs text-slate-400 mt-1">Guaranteed off quota</span>
                 </div>
 
                 <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Approved Leaves
                   </span>
                   <div className="text-3xl font-extrabold text-amber-600 mt-2">
                     {activeEmpStats.leaveDays}
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1">Planned absences</span>
+                  <span className="text-xs text-slate-400 mt-1">Planned absences</span>
                 </div>
 
                 <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs flex flex-col justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
                     Floater Backups
                   </span>
                   <div className="text-3xl font-extrabold text-sky-600 mt-2">
                     {activeEmpStats.backupDays}
                   </div>
-                  <span className="text-[11px] text-slate-400 mt-1">Emergency pod covers</span>
+                  <span className="text-xs text-slate-400 mt-1">Emergency pod covers</span>
                 </div>
               </div>
             </div>

@@ -125,15 +125,17 @@ export default function AppLayout({ children }) {
 
             {/* Critical Gaps Alert Banner */}
             {criticalGapsCount > 0 && (
-              <div className="p-3.5 rounded-xl bg-gradient-to-r from-amber-50/90 via-rose-50/80 to-amber-50/90 border border-amber-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2.5">
-                  <span className="p-1.5 rounded-lg bg-amber-100 text-amber-800 shrink-0">
+              <div className="p-4 rounded-xl bg-amber-50/80 border border-amber-200 shadow-2xs flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-amber-100 border border-amber-200 text-amber-800 flex items-center justify-center shrink-0">
                     <AlertTriangle className="h-4 w-4" />
-                  </span>
+                  </div>
                   <div>
-                    <strong className="text-slate-900 font-bold">Action Needed:</strong>{' '}
-                    <span className="text-slate-700 font-medium">
-                      {criticalGapsCount} coverage gap(s) detected. Client operations are currently understaffed on specific days.
+                    <span className="text-amber-950 font-bold block text-sm">
+                      {criticalGapsCount} Operational Coverage Gaps Detected
+                    </span>
+                    <span className="text-amber-800 font-medium">
+                      Client operations are understaffed on specific days due to employee leave collisions.
                     </span>
                   </div>
                 </div>
@@ -143,7 +145,7 @@ export default function AppLayout({ children }) {
                     type="button"
                     onClick={autoResolveAll}
                     disabled={isAutoResolving}
-                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                   >
                     <Zap className="h-3.5 w-3.5 fill-current" />
                     <span>{isAutoResolving ? 'Resolving...' : 'Auto-Resolve All'}</span>
@@ -152,7 +154,7 @@ export default function AppLayout({ children }) {
                   <button
                     type="button"
                     onClick={() => setIsConflictDrawerOpen(true)}
-                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 rounded-lg bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-semibold text-xs shadow-2xs transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <span>Review Gaps</span>
                     <ArrowRight className="h-3.5 w-3.5" />

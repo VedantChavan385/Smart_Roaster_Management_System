@@ -237,7 +237,7 @@ export default function OverviewView() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 uppercase">
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-700 uppercase">
                           {conflict.severity}
                         </span>
                         <span className="text-xs font-bold text-slate-900">
@@ -250,17 +250,17 @@ export default function OverviewView() {
                     </div>
 
                     <div>
-                      <div className="text-xs font-semibold text-slate-800">
+                      <div className="text-sm font-semibold text-slate-800">
                         {conflict.brandName}
                       </div>
-                      <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
                         {conflict.description}
                       </p>
                     </div>
 
                     {bestBackup ? (
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <div className="text-[11px] text-indigo-700 font-medium truncate">
+                        <div className="text-xs text-indigo-700 font-medium truncate">
                           💡 Backup: <strong>{bestBackup.employeeName}</strong>
                         </div>
                         <Button
@@ -456,30 +456,30 @@ export default function OverviewView() {
         <div className="space-y-4">
           {/* Summary Stats for Selected Date */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-100">
-              <div className="text-[10px] font-bold text-emerald-800 uppercase">Working on Duty</div>
-              <div className="text-lg font-extrabold text-emerald-900 mt-0.5">
+            <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100">
+              <div className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Working on Duty</div>
+              <div className="text-xl font-extrabold text-emerald-900 mt-0.5">
                 {workingShiftsOnDate.length} Staff
               </div>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-slate-100/70 border border-slate-200">
-              <div className="text-[10px] font-bold text-slate-600 uppercase">Weekly Off</div>
-              <div className="text-lg font-extrabold text-slate-900 mt-0.5">
+            <div className="p-3 rounded-xl bg-slate-100/70 border border-slate-200">
+              <div className="text-xs font-semibold text-slate-600 uppercase tracking-wider">Weekly Off</div>
+              <div className="text-xl font-extrabold text-slate-900 mt-0.5">
                 {offShiftsOnDate.length} Staff
               </div>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-amber-50/70 border border-amber-100">
-              <div className="text-[10px] font-bold text-amber-800 uppercase">On Leave</div>
-              <div className="text-lg font-extrabold text-amber-900 mt-0.5">
+            <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-100">
+              <div className="text-xs font-semibold text-amber-800 uppercase tracking-wider">On Leave</div>
+              <div className="text-xl font-extrabold text-amber-900 mt-0.5">
                 {leaveShiftsOnDate.length} Staff
               </div>
             </div>
 
-            <div className="p-2.5 rounded-lg bg-rose-50/70 border border-rose-100">
-              <div className="text-[10px] font-bold text-rose-800 uppercase">Unstaffed Gaps</div>
-              <div className="text-lg font-extrabold text-rose-900 mt-0.5">
+            <div className="p-3 rounded-xl bg-rose-50/70 border border-rose-100">
+              <div className="text-xs font-semibold text-rose-800 uppercase tracking-wider">Unstaffed Gaps</div>
+              <div className="text-xl font-extrabold text-rose-900 mt-0.5">
                 {gapsOnDate.length} Gaps
               </div>
             </div>
@@ -487,7 +487,7 @@ export default function OverviewView() {
 
           {/* List of Shifts on Selected Date */}
           <div className="border border-slate-200 rounded-xl overflow-hidden">
-            <div className="bg-slate-50/80 px-4 py-2.5 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase grid grid-cols-12 gap-2">
+            <div className="bg-slate-50/80 px-4 py-2.5 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider grid grid-cols-12 gap-2">
               <span className="col-span-4">Employee / Pod</span>
               <span className="col-span-4">Assigned Brand & Process</span>
               <span className="col-span-2">Shift Status</span>
@@ -504,10 +504,10 @@ export default function OverviewView() {
                   return (
                     <div
                       key={`${shift.employeeId}-${shift.date}`}
-                      className="px-4 py-2.5 text-xs grid grid-cols-12 gap-2 items-center hover:bg-slate-50/80 transition-colors"
+                      className="px-4 py-3 text-xs grid grid-cols-12 gap-2 items-center hover:bg-slate-50/80 transition-colors"
                     >
-                      <div className="col-span-4 flex items-center gap-2 min-w-0">
-                        <div className="h-7 w-7 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex items-center justify-center shrink-0">
+                      <div className="col-span-4 flex items-center gap-2.5 min-w-0">
+                        <div className="h-8 w-8 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">
                           {emp ? emp.name.split(' ').map((n) => n[0]).join('') : '??'}
                         </div>
                         <div className="min-w-0">
@@ -517,11 +517,11 @@ export default function OverviewView() {
                               setSelectedEmployeeId(shift.employeeId);
                               setActiveView('employees');
                             }}
-                            className="font-semibold text-slate-900 hover:text-indigo-600 truncate block text-left"
+                            className="font-bold text-slate-900 hover:text-indigo-600 truncate block text-left cursor-pointer"
                           >
                             {emp ? emp.name : shift.employeeId}
                           </button>
-                          <span className="text-[10px] text-slate-400 truncate block">
+                          <span className="text-xs text-slate-500 truncate block">
                             {pod ? pod.name.split(' ')[1] : 'Unassigned Pod'}
                           </span>
                         </div>

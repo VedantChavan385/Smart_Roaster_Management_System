@@ -201,13 +201,13 @@ export default function ConflictCenterView() {
         <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[300px]">
           {/* Search */}
           <div className="relative min-w-[200px] flex-1 max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search by brand, process or date..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+              className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
@@ -215,7 +215,7 @@ export default function ConflictCenterView() {
           <select
             value={selectedPodId}
             onChange={(e) => setSelectedPodId(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            className="h-9 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
           >
             <option value="ALL">All Pods ({pods.length})</option>
             {pods.map((p) => (
@@ -229,7 +229,7 @@ export default function ConflictCenterView() {
           <select
             value={selectedBrandId}
             onChange={(e) => setSelectedBrandId(e.target.value)}
-            className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            className="h-9 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
           >
             <option value="ALL">All Brands ({brands.length})</option>
             {brands.map((b) => (
@@ -240,13 +240,13 @@ export default function ConflictCenterView() {
           </select>
 
           {/* Severity Toggle */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={() => setSeverityFilter('ALL')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+              className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 severityFilter === 'ALL'
-                  ? 'bg-slate-800 text-white'
+                  ? 'bg-slate-800 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -255,9 +255,9 @@ export default function ConflictCenterView() {
             <button
               type="button"
               onClick={() => setSeverityFilter('CRITICAL')}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+              className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 severityFilter === 'CRITICAL'
-                  ? 'bg-rose-600 text-white'
+                  ? 'bg-rose-600 text-white shadow-xs'
                   : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
               }`}
             >

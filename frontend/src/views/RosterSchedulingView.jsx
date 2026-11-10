@@ -131,7 +131,7 @@ export default function RosterSchedulingView() {
         if (shift.isBackup) {
           return (
             <span
-              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800 border border-sky-300 shadow-2xs hover:bg-sky-200 transition-colors"
+              className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-50 text-sky-800 border border-sky-300 shadow-2xs hover:bg-sky-100 transition-colors"
               title={`Backup Floater: ${shift.notes || 'Emergency assignment'}`}
             >
               BACKUP
@@ -140,7 +140,7 @@ export default function RosterSchedulingView() {
         }
         return (
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs hover:bg-emerald-100 transition-colors"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/90 shadow-2xs hover:bg-emerald-100 transition-colors"
             title={`${shift.process || 'CS'} on duty: 09:00 - 18:00`}
           >
             {shift.process || 'CS'}
@@ -150,7 +150,7 @@ export default function RosterSchedulingView() {
       case 'OFF':
         return (
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 transition-colors"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 transition-colors"
             title="Weekly Off Quota"
           >
             OFF
@@ -159,7 +159,7 @@ export default function RosterSchedulingView() {
       case 'LEAVE':
         return (
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 shadow-2xs hover:bg-amber-200 transition-colors"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-300 shadow-2xs hover:bg-amber-100 transition-colors"
             title={shift.notes || 'Approved Planned Leave'}
           >
             LEAVE
@@ -168,7 +168,7 @@ export default function RosterSchedulingView() {
       case 'HOLIDAY':
         return (
           <span
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300 shadow-2xs hover:bg-purple-200 transition-colors"
+            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-300 shadow-2xs hover:bg-purple-100 transition-colors"
             title="Public Operating Holiday"
           >
             HOLIDAY
@@ -332,13 +332,13 @@ export default function RosterSchedulingView() {
           <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-[320px]">
             {/* Search Input */}
             <div className="relative min-w-[200px] flex-1 max-w-xs">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search staff, skill, ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
+                className="w-full h-9 pl-8 pr-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
@@ -346,7 +346,7 @@ export default function RosterSchedulingView() {
             <select
               value={selectedPodId}
               onChange={(e) => setSelectedPodId(e.target.value)}
-              className="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+              className="h-9 bg-slate-50 border border-slate-200 rounded-lg px-3 text-xs font-semibold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               <option value="ALL">All Pods ({pods.length})</option>
               {pods.map((p) => (
@@ -357,13 +357,13 @@ export default function RosterSchedulingView() {
             </select>
 
             {/* Quick Status Filters */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setFilterMode('ALL')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filterMode === 'ALL'
-                    ? 'bg-slate-800 text-white shadow-2xs'
+                    ? 'bg-slate-800 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
@@ -372,46 +372,46 @@ export default function RosterSchedulingView() {
               <button
                 type="button"
                 onClick={() => setFilterMode('LEAVES_ONLY')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filterMode === 'LEAVES_ONLY'
-                    ? 'bg-amber-600 text-white shadow-2xs'
+                    ? 'bg-amber-600 text-white shadow-xs'
                     : 'bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100'
                 }`}
               >
-                Leaves Only
+                Leaves
               </button>
               <button
                 type="button"
                 onClick={() => setFilterMode('FLOATERS_ONLY')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filterMode === 'FLOATERS_ONLY'
-                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    ? 'bg-indigo-600 text-white shadow-xs'
                     : 'bg-indigo-50 text-indigo-800 border border-indigo-200 hover:bg-indigo-100'
                 }`}
               >
-                Floaters Only
+                Floaters
               </button>
               <button
                 type="button"
                 onClick={() => setFilterMode('BACKUP_ONLY')}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   filterMode === 'BACKUP_ONLY'
-                    ? 'bg-sky-600 text-white shadow-2xs'
+                    ? 'bg-sky-600 text-white shadow-xs'
                     : 'bg-sky-50 text-sky-800 border border-sky-200 hover:bg-sky-100'
                 }`}
               >
-                Backups Only
+                Backups
               </button>
             </div>
           </div>
 
           {/* Color-Coded Status Legend */}
-          <div className="flex items-center gap-3 text-[11px] font-medium text-slate-600 shrink-0">
+          <div className="flex items-center gap-3 text-xs font-medium text-slate-600 shrink-0">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Working
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-500" /> Backup Floater
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500" /> Floater
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500" /> Leave
@@ -420,7 +420,7 @@ export default function RosterSchedulingView() {
               <span className="w-2.5 h-2.5 rounded-full bg-purple-500" /> Holiday
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-slate-400" /> Weekly Off
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-400" /> Off
             </span>
           </div>
         </div>

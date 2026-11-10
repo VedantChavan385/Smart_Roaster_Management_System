@@ -169,49 +169,49 @@ export default function ReportsAnalyticsView() {
       {/* 2. Top Summary KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Workforce Utilization
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">
             {avgUtilization}%
           </div>
-          <span className="text-[11px] text-emerald-600 font-semibold block mt-1">
+          <span className="text-xs text-emerald-600 font-semibold block mt-1">
             {workingShifts.length} Working Shifts
           </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Overall Coverage SLA
           </span>
           <div className="text-2xl font-bold text-slate-900 mt-1">
             {roster?.metadata?.coverageRate || 75}%
           </div>
-          <span className="text-[11px] text-indigo-600 font-medium block mt-1">
+          <span className="text-xs text-indigo-600 font-medium block mt-1">
             Across 14 D2C Brand Accounts
           </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Guaranteed Off Quota
           </span>
           <div className="text-2xl font-bold text-slate-700 mt-1">
             {offShifts.length} <span className="text-xs text-slate-500 font-medium">Days</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium block mt-1">
+          <span className="text-xs text-slate-500 font-medium block mt-1">
             100% contract compliance
           </span>
         </div>
 
         <div className="p-4 rounded-xl bg-white border border-slate-200/80 shadow-2xs">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Floater Backup Activations
           </span>
           <div className="text-2xl font-bold text-sky-600 mt-1">
             {backupShifts.length} <span className="text-xs text-slate-500 font-medium">Shifts</span>
           </div>
-          <span className="text-[11px] text-slate-500 font-medium block mt-1">
+          <span className="text-xs text-slate-500 font-medium block mt-1">
             Emergency cross-pod covers
           </span>
         </div>
@@ -285,7 +285,7 @@ export default function ReportsAnalyticsView() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <h4 className="font-bold text-sm text-slate-900">{pod.name}</h4>
-                      <p className="text-[11px] text-slate-500">Lead: {pod.leadName} • {pod.empCount} Staff Members</p>
+                      <p className="text-xs text-slate-500">Lead: {pod.leadName} • {pod.empCount} Staff Members</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -378,11 +378,11 @@ export default function ReportsAnalyticsView() {
                     <td className="px-3 py-3 text-slate-600">{brand.category}</td>
                     <td className="px-3 py-3">
                       {brand.staffingType === 'SINGLE_RESOURCE' ? (
-                        <span className="font-mono text-amber-700 font-bold text-[11px]">
+                        <span className="font-mono text-amber-700 font-bold text-xs">
                           Dedicated 1-Agent (80%)
                         </span>
                       ) : (
-                        <span className="font-mono text-sky-700 font-bold text-[11px]">
+                        <span className="font-mono text-sky-700 font-bold text-xs">
                           Multi-Resource
                         </span>
                       )}
@@ -403,7 +403,7 @@ export default function ReportsAnalyticsView() {
                             style={{ width: `${brand.coverageRate}%` }}
                           />
                         </div>
-                        <span className="font-bold text-[11px] text-slate-700">
+                        <span className="font-bold text-xs text-slate-700">
                           {brand.coverageRate}%
                         </span>
                       </div>
@@ -540,3 +540,4 @@ export default function ReportsAnalyticsView() {
     </div>
   );
 }
+

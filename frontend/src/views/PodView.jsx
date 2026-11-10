@@ -133,7 +133,7 @@ export default function PodView({
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-700">
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-700">
                   {pod.id.replace('_', ' ')}
                 </span>
                 {conflictCount > 0 ? (
@@ -148,15 +148,15 @@ export default function PodView({
               </div>
 
               <h3 className="font-bold text-slate-900 text-sm">{pod.name}</h3>
-              <p className="text-[11px] text-slate-500 line-clamp-1 mt-1">
+              <p className="text-xs text-slate-500 line-clamp-1 mt-1">
                 Lead: {pod.leadName}
               </p>
 
               <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                <span className="flex items-center gap-1 font-semibold text-slate-700">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
                   <Users className="h-3.5 w-3.5 text-slate-400" /> {memberCount} Staff
                 </span>
-                <span className="flex items-center gap-1 font-semibold text-slate-700">
+                <span className="flex items-center gap-1.5 font-semibold text-slate-700">
                   <Building2 className="h-3.5 w-3.5 text-slate-400" /> {brandCount} Brands
                 </span>
               </div>
@@ -190,25 +190,25 @@ export default function PodView({
           </div>
 
           <div className="flex items-center gap-3 shrink-0">
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <div className="text-lg font-extrabold text-slate-900">{podEmployees.length}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">Total Staff</div>
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center min-w-[90px]">
+              <div className="text-xl font-extrabold text-slate-900">{podEmployees.length}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Total Staff</div>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center">
-              <div className="text-lg font-extrabold text-indigo-700">{podBrands.length}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">Brands Managed</div>
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center min-w-[90px]">
+              <div className="text-xl font-extrabold text-indigo-700">{podBrands.length}</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Brands Managed</div>
             </div>
 
-            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center">
+            <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-center min-w-[90px]">
               <div
-                className={`text-lg font-extrabold ${
+                className={`text-xl font-extrabold ${
                   podConflicts.length > 0 ? 'text-rose-600' : 'text-emerald-600'
                 }`}
               >
                 {podConflicts.length}
               </div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">Coverage Gaps</div>
+              <div className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Coverage Gaps</div>
             </div>
           </div>
         </div>
@@ -472,7 +472,7 @@ export default function PodView({
                         if (shift.status === 'WORKING') {
                           badge = (
                             <span
-                              className={`px-1 py-0.5 rounded text-[9px] font-bold ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
                                 shift.isBackup
                                   ? 'bg-sky-100 text-sky-800'
                                   : 'bg-emerald-50 text-emerald-800'
@@ -483,19 +483,19 @@ export default function PodView({
                           );
                         } else if (shift.status === 'LEAVE') {
                           badge = (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
                               LV
                             </span>
                           );
                         } else if (shift.status === 'HOLIDAY') {
                           badge = (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-800">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">
                               HOL
                             </span>
                           );
                         } else if (shift.status === 'OFF' || shift.status === 'WEEKLY_OFF') {
                           badge = (
-                            <span className="px-1 py-0.5 rounded text-[9px] font-medium bg-slate-100 text-slate-500">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">
                               OFF
                             </span>
                           );
