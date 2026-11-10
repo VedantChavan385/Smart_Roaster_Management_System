@@ -19,6 +19,10 @@ import RosterSchedulingView from './views/RosterSchedulingView';
 import CompanyDirectoryView from './views/CompanyDirectoryView';
 import ConflictCenterView from './views/ConflictCenterView';
 import RosterAutomationView from './views/RosterAutomationView';
+import ReportsAnalyticsView from './views/ReportsAnalyticsView';
+import AttendanceLeavesView from './views/AttendanceLeavesView';
+import RolesPermissionsView from './views/RolesPermissionsView';
+import SettingsView from './views/SettingsView';
 
 import {
   Sparkles,
@@ -149,50 +153,19 @@ function MainAppContent() {
         return <RosterAutomationView />;
 
       case 'leaves':
+        return <AttendanceLeavesView />;
+
       case 'reports':
+        return <ReportsAnalyticsView />;
+
       case 'roles':
+        return <RolesPermissionsView />;
+
       case 'settings':
+        return <SettingsView />;
+
       default:
-        return (
-          <div className="space-y-6">
-            <PageHeader
-              title={currentNav.label}
-              subtitle={currentNav.description}
-              badge="Module Active"
-              badgeVariant="slate"
-              breadcrumbs={[{ label: currentNav.section }, { label: currentNav.label }]}
-            />
-            <Card className="p-8 text-center">
-              <div className="max-w-md mx-auto space-y-3">
-                <div className="h-12 w-12 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto">
-                  <Sparkles className="h-6 w-6" />
-                </div>
-                <h3 className="text-sm font-bold text-slate-900">{currentNav.label} Ready for Phase Expansion</h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  The enterprise navigation shell and state architecture for this section are active. You can review live rosters and brand matrices right now.
-                </p>
-                <div className="pt-2 flex items-center justify-center gap-2">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    icon={CalendarDays}
-                    onClick={() => setActiveView('roster')}
-                  >
-                    Go to Roster & Scheduling
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    icon={Layers}
-                    onClick={() => setActiveView('brand-coverage')}
-                  >
-                    View Brand Matrix
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
-        );
+        return <OverviewView />;
     }
   };
 
