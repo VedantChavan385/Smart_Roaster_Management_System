@@ -14,6 +14,7 @@ import PodView from './views/PodView';
 import BrandView from './views/BrandView';
 import ProcessView from './views/ProcessView';
 import EmployeeView from './views/EmployeeView';
+import OverviewView from './views/OverviewView';
 
 import {
   Sparkles,
@@ -84,6 +85,8 @@ function MainAppContent() {
   const renderViewContent = () => {
     switch (activeView) {
       case 'overview':
+        return <OverviewView />;
+
       case 'roster':
         return (
           <div className="space-y-6">
