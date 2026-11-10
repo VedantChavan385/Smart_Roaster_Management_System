@@ -1,6 +1,8 @@
 /**
  * Base HTTP client for Smart Roster API
  */
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
 export async function apiRequest(endpoint, options = {}) {
   const config = {
     headers: {
@@ -14,7 +16,8 @@ export async function apiRequest(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
-  const response = await fetch(endpoint, config);
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
+  const response = await fetch(url, config);
   const data = await response.json().catch(() => ({
     success: false,
     error: `HTTP ${response.status}: Failed to parse JSON response`,
