@@ -1,6 +1,7 @@
 # Smart Roster Management System 🚀
 > **DataStraw Tech Internship Assessment Assignment**  
-> A browser-based operational control center and deterministic scheduling solver designed for multi-brand D2C operations.
+> A browser-based operational control center and deterministic scheduling solver designed for multi-brand D2C operations.  
+> 📄 Read the complete [**Approach Note (Architecture & Key Decisions)**](./APPROACH_NOTE.md)
 
 ---
 
