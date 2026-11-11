@@ -78,64 +78,52 @@ The application is pre-seeded strictly in accordance with DataStraw's real-world
 
 ---
 
-## 🧠 Tell Us How You Think (Section 8 Answers)
+## 🧠 8. Tell Us How You Think
 
 ### 1. How did you model employees, brands, processes, pods, and their relationships?
-* **Pods (`Pod`):** Represent administrative clusters overseen by a single Pod Lead. Pods serve as the first-order affinity boundary for backup recommendations.
-* **Employees (`Employee`):** Store individual competencies (`skills: ['CS', 'ACC', 'NDR', 'Retention']`), contractual weekly off quotas (1 or 2 days/week), preferred rest days, and primary brand assignments.
-* **Brands (`Brand`):** Encapsulate client operating calendars (`365_DAYS`, `DAILY_EXCEPT_HOLIDAYS`, `MON_SAT_EXCEPT_HOLIDAYS`), staffing tier (`SINGLE_RESOURCE` vs `MULTI_RESOURCE`), assigned staff IDs, and an array of process requirements.
-* **Process Requirements:** Each process within a brand specifies its own `minStaffing` and operating calendar (allowing CS to run 365 days while NDR runs Mon–Sat).
-* **Rosters (`Roster`):** Monthly immutable snapshots storing normalized shift objects (`{ date, employeeId, brandId, process, status, isBackup }`) and evaluated conflict diagnostics.
+* **Pod**: Operational squads led by a Pod Lead (e.g., Pod Alpha, Beta, Gamma) that act as the primary team boundary.
+* **Brand**: Belongs to a Pod. Specifies its operating calendar (e.g., `365_DAYS`, `MON_SAT`) and the daily processes it needs (`CS`, `ACC`, `NDR`, `Retention`).
+* **Employee**: Belongs to a Pod, holds specific skills, has a weekly off quota (1 or 2 days/week), and assigned brands. Employees without assigned brands serve as **Pod Floaters / Backups**.
+* **Relationship**: Dedicated employees cover their assigned Brand's processes. When they are off, available Floaters from the same Pod step in first before looking cross-pod.
 
 ### 2. How does your system generate a roster and determine whether it satisfies the required constraints?
-The solver uses a deterministic **5-Stage Constraint Satisfaction Pipeline**:
-1. **Demand Resolution:** Evaluates the operating calendar for every brand process on every date of the month to compute the target staffing requirement.
-2. **Leave Shielding (Hard Constraint):** Marks any employee with approved leave (`PLANNED`, `SICK`, `COMP_OFF`) as non-workable.
-3. **Primary Assignment & Single-Resource Expansion:** Deploys assigned employees. For single-resource brands (~80%), an on-duty shift fulfills all active brand processes simultaneously.
-4. **Rotational Offs & Workload Smoothing:** Evaluates continuous work streaks (capped at max 6 consecutive days) and off-day preferences. On multi-resource brands, it rotates weekly offs among peers to prevent burnout while maintaining client coverage.
-5. **Constraint Validation:** Scans the resulting coverage matrix against client demands. Any shortfall generates a structured `Conflict` object.
+The system uses a **5-step deterministic solver**:
+1. **Demand Mapping**: Calculates exact required staff for every brand process on each calendar date.
+2. **Leave Shielding (Hard Rule)**: Locks approved leaves (`PLANNED`, `SICK`, `COMP_OFF`) — employees on leave are never scheduled.
+3. **Primary Deployment**: Schedules dedicated employees to their brands (for single-resource brands, one shift covers all brand processes).
+4. **Rest Day Balancing**: Enforces a maximum of 6 consecutive working days and respects off-day preferences.
+5. **Constraint Validation**: Scans assigned staff against required demand. Any shortfall is flagged as a `COVERAGE_GAP` conflict with root cause diagnostics.
 
 ### 3. How did you handle the difference between single-resource brands and brands with multiple employees?
-* **Single-Resource Brands (~80%):** The dedicated employee acts as a multi-skilled generalist. When active, their shift credits coverage across all configured processes (CS + ACC + NDR). However, because redundancy is 0, any scheduled off or approved leave directly creates an operational coverage gap unless a floater/backup is assigned.
-* **Multi-Resource Brands (~20%):** Work is partitioned by specialized processes. The engine rotates weekly offs between assigned peers, allowing Employee A to rest on Sunday while Employee B covers weekend CS, and vice-versa on Monday.
+* **Single-Resource Brands (~80% of accounts)**: One dedicated generalist manages all processes (CS + ACC + NDR) simultaneously. Because there is zero built-in redundancy, any weekly off or leave directly creates a coverage gap that requires a backup.
+* **Multi-Resource Brands (~20% of accounts)**: High-volume brands staffed by 2 to 4 specialists. The solver staggers and rotates their weekly offs so the brand stays continuously covered without dropping below minimum required headcount.
 
 ### 4. What happens when an employee manages all processes for a brand but is unavailable on a required working day?
-* The solver strictly honors the leave (Tier-1 Hard Constraint) and **does not silently schedule an impossible shift**.
-* It flags a **`CRITICAL COVERAGE GAP`** on that date.
-* The diagnostic engine generates a clear explanation:
-  > *"Coverage Gap on 2026-11-15: GlowSkin Organics (CS) requires 1 staff, but has 0. Aarav Patel is the assigned resource but is on approved PLANNED leave (Family Event)."*
-* It automatically triggers the **Backup Recommendation Engine**, which scores available employees based on:
-  1. *Same-Pod Floater on duty (Score: 100)*
-  2. *Same-Pod Peer on weekly off (Score: 80 - eligible for comp-off swap)*
-  3. *Cross-Pod Floater (Score: 70)*
-* The manager can resolve the gap with a single click.
+* The solver strictly honors their leave (never forces an impossible shift).
+* Coverage for all brand processes drops to 0 on that date.
+* The system flags a **Critical Coverage Gap** explaining the exact reason (e.g., *"Aarav Patel on planned leave for Family Event"*).
+* The recommendation engine scores and ranks the best available replacement candidates (e.g., a same-pod floater on duty) so the manager can fill the gap in one click.
 
 ### 5. How does your system handle conflicting requirements or insufficient staffing?
-* The system enforces a **strict hierarchy of constraints**:
-  1. **Hard Constraints (Non-negotiable):** Approved leaves, client operating mandates, skill qualification checks.
-  2. **Soft Constraints (Optimizable):** Preferred off-days (e.g. preferring Sunday), keeping pod members together.
-* When demand exceeds workforce supply, rather than producing an invalid roster or violating employee rest limits, the system creates an explicit `Conflict` record and visualizes it as a **RED badge** on the Brand Matrix and in the Gaps Drawer.
+* **Strict Rule Hierarchy**: Hard constraints (approved leaves, contract rest days) always take priority over soft constraints (preferred off days).
+* **Transparent Alerting**: If total staffing is insufficient, the system never silently breaks rules or fakes coverage. It produces an explicit conflict and highlights the gap with a red badge on the Brand Coverage Matrix and Conflicts Drawer.
+* **Ranked Recommendations**: It evaluates all available staff and suggests the best backup using a 4-tier suitability score (same-pod floater > same-pod peer on off-day > cross-pod floater > cross-pod peer).
 
 ### 6. Which parts of the process did you automate, and which did you leave under human control? Why?
-* **Automated:**
-  * Calculating operating open/closed days across varied brand calendars.
-  * Standard shift distribution and rotating off-days.
-  * Continuous streak enforcement (preventing >6 days without rest).
-  * Gap detection and candidate backup ranking.
-* **Left under Human Control (Operations Manager):**
-  * Approving cross-pod reassignments or calling in an off-duty employee for comp-off.
-  * Overriding client SLA requirements during emergencies.
-* *Why?* Operations managers possess real-world business context (client escalation sensitivity, employee personal emergencies, overtime budgets) that an algorithm cannot fully capture. Automation handles 90% of the mechanical scheduling; human judgment resolves critical trade-offs.
+* **Automated**: Calendar demand calculation, daily shift assignments, leave shielding, streak limit checks (max 6 days), gap detection, and backup candidate ranking.
+* **Human Control**: Final approval of backup assignments, manual shift edits/swaps, and handling emergency overrides.
+* **Why**: Algorithms excel at calculating hundreds of rules, dates, and constraints in milliseconds, but operations managers possess real-world business context (client relationships, budget for comp-offs, personal emergencies) needed for final decision-making.
 
 ### 7. If the company doubled its team and brand count, what would you change about your solution?
-1. **Hierarchical Pod Partitioning:** The solver can run independently per Pod in parallel (O(N) with respect to pods), reducing computation overhead.
-2. **Dedicated Shift Swap Marketplace:** Self-service portal where employees can request shift swaps with pod peers with automated validation against brand constraints.
-3. **Database Indexing & Caching:** Sharded MongoDB collections indexed on `(brandId, date)` and `(employeeId, date)` with Redis caching for instantaneous month switching.
+1. **Pod-by-Pod Parallel Solving**: Partition and solve each Pod independently in parallel rather than running a single monolithic solver pass.
+2. **Database Indexing & Caching**: Add compound indexes on `(brandId, date)` and cache monthly schedule views.
+3. **Table Virtualization**: Implement virtual scrolling (`@tanstack/react-virtual`) on the roster grid so rendering 60+ employees and 30+ brands remains lightning-fast.
+4. **Peer Shift-Swap System**: Add self-service swap requests where agents can trade shifts, with automated validation before manager sign-off.
 
 ### 8. If you had one additional week to work on this, what would you improve first?
-1. **Automated Roster Re-balancing (One-Click Auto-Fix):** An optimization pass (using Mixed Integer Linear Programming / Simplex solver) that automatically assigns ranked backups across all gaps without requiring individual manual clicks.
-2. **Multi-Shift Time Granularity:** Support for morning, afternoon, and night shift splits (e.g., 9 AM–6 PM, 2 PM–11 PM) for 24/7 D2C brands.
-3. **Slack / WhatsApp Notifications:** Webhook notifications notifying pod leads and agents whenever a published roster has changes.
+1. **1-Click Auto-Resolve**: A single button that automatically assigns the highest-scoring backup to all detected gaps across the entire month.
+2. **Multi-Shift Time Granularity**: Support for morning, evening, and night shift slots (e.g., 9 AM–6 PM, 2 PM–11 PM) for 24/7 D2C brands.
+3. **Live Sync & Alerts**: Push notifications and `.ics` calendar sync (Google Calendar / Outlook) so agents are instantly updated on shift changes.
 
 ---
 
